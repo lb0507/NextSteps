@@ -1,0 +1,65 @@
+﻿@*
+    User Sign-In Page
+    3/12/2026
+
+*@
+
+@using NextSteps.DataLibrary;
+
+<!-- Link to the page -->
+@page "/signin"
+
+<!-- Allows user to interact -->
+@rendermode InteractiveWebAssembly
+
+<div class="page-container">
+
+    <!-- Page Headers -->
+    <h1>Sign-In</h1>
+
+    <!-- Input Fields -->
+    <input type="text" @bind-value="user.Email" placeholder="Email" class="email-field" />
+    <p>
+        <!--Password input field, if showPassword is set to false, input characters will show as dots-->
+        @if (showPassword)
+        {
+            <input type="text" @bind-value="user.Password" placeholder="Password" class="password-field" />
+        }
+        else
+        {
+            <input type="password" @bind-value="user.Password" placeholder="Password" class="password-field" />
+        }
+        <!--A checkbox; if checked off, the input in the password field is visible-->
+        <div id="chkbx">
+            <input type="checkbox" id="show-password" @onclick="() => {showPassword = !showPassword;}">
+            <label for="show-password"> Show </label>
+        </div>
+    </p>
+    <!--The buttons to sign in and to clear the input from the text fields-->
+    <input type="submit" value="Sign In" @onclick="HandleLogin" class="btn btn-login" /> <button class="btn btn-clear" @onclick="()=> {user = new();}">Clear Form</button>
+
+    <p><i>Don't have an account?</i> <a href="/signup">Sign Up</a> </p>
+
+</div>
+
+
+@code {
+    private User user = new User();
+
+    private bool showPassword = false;
+    private string email = "";
+    private string password = "";
+
+    #region[METHODS]
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine("Loading Page");
+    }
+
+    private async Task HandleLogin()
+    {
+        Console.WriteLine("Logging In");
+    }
+    #endregion
+}
