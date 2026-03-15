@@ -1,0 +1,87 @@
+﻿@*
+    Funeral Landing Page
+    3/14/2026
+    ======================================
+    - Initial page creation
+    ======================================
+    Landing page navigated to after selecting a Funeral.
+    Category selection page for a Funeral.
+*@
+
+@using BlazorBootstrap
+@using DataLibrary.Models;
+@using DataLibrary.ServiceLayer.FuneralService;
+@using DataLibrary.ServiceLayer.UserService;
+@using NextSteps.Client.Components
+@using NextSteps.Client.Shared
+
+<!-- Inject Services -->
+@inject NavigationManager _nav
+@inject BrowserStorageService _storage
+@inject IFuneralService _funeral
+@inject IUserService _user
+
+<!-- Allows user to interact -->
+@rendermode InteractiveServer
+
+<!-- Override MainLayout from Server and use Client's Custom Layout-->
+@layout CustomLayout
+
+@page "/funeral"
+
+<div class="page-container">
+
+    <!-- Page Headers -->
+    <h1>Funeral for @currentFuneral.DeceasedName</h1>
+
+    <Button Type="ButtonType.Link" To="/funeral-selection">Back to Funeral Selection</Button>
+
+    <!-- Category Selection Icon Grid -->
+    <div class="table-container">
+        <table class="icon-grid">
+            <tr>
+                <td><Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/General Info">General Info</Button></td>
+                <td><Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/client-info">Category</Button></td>
+                <td><Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/client-info">Category</Button></td>
+            </tr>
+            <tr>
+                <td><Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/client-info">Category</Button></td>
+                <td><Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/client-info">Category</Button></td>
+                <td><Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/client-info">Category</Button></td>
+            </tr>
+            <tr>
+                <td><Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/client-info">Category</Button></td>
+                <td><Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/client-info">Category</Button></td>
+                <td><Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/client-info">Category</Button></td>
+            </tr>
+        </table>
+    </div>
+    
+</div>
+
+
+@code {
+
+    private Funeral currentFuneral = new();
+
+    private User currentUser = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            currentUser = await _storage.GetAsync<User>("currentUser") ?? new();
+
+            // Check if the user is signed in. If not, navigate them to the Sign In page
+            if (currentUser is null)
+            {
+                _nav.NavigateTo("/");
+            }
+            else
+            {
+                currentFuneral = await _storage.GetAsync<Funeral>("currentFuneral") ?? new();
+            }
+        }
+        StateHasChanged();
+    }
+}

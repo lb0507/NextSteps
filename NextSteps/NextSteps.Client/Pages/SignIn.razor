@@ -1,65 +1,124 @@
 ﻿@*
     User Sign-In Page
-    3/12/2026
-
+    3/13/2026
+    ======================================
+    - Initial page creation
+    - Added Sign In funcitonality and input field validation
+    ======================================
 *@
 
-@using NextSteps.DataLibrary;
+@using BlazorBootstrap;
+@using DataLibrary;
+@using DataLibrary.Models;
+@using DataLibrary.ServiceLayer.UserService;
+@using NextSteps.Client.Components
+@using NextSteps.Client.Shared
+
+<!-- Injections -->
+@inject IUserService _user
+@inject BrowserStorageService _storage
+@inject NavigationManager _nav
+
+<!-- Override MainLayout from Server and use Client's Custom Layout-->
+@layout CustomLayout
 
 <!-- Link to the page -->
-@page "/signin"
+@page "/"
 
 <!-- Allows user to interact -->
-@rendermode InteractiveWebAssembly
+@rendermode InteractiveServer
+
+<!-- Screen Message Modal for invalid log in prompt -->
+<ScreenModal @ref="modal" TitleText="Login Failed" BodyText="The credentials you have entered are invalid. Please check your email and password and try again." />
 
 <div class="page-container">
 
     <!-- Page Headers -->
     <h1>Sign-In</h1>
 
-    <!-- Input Fields -->
-    <input type="text" @bind-value="user.Email" placeholder="Email" class="email-field" />
-    <p>
-        <!--Password input field, if showPassword is set to false, input characters will show as dots-->
-        @if (showPassword)
-        {
-            <input type="text" @bind-value="user.Password" placeholder="Password" class="password-field" />
-        }
-        else
-        {
-            <input type="password" @bind-value="user.Password" placeholder="Password" class="password-field" />
-        }
-        <!--A checkbox; if checked off, the input in the password field is visible-->
-        <div id="chkbx">
-            <input type="checkbox" id="show-password" @onclick="() => {showPassword = !showPassword;}">
-            <label for="show-password"> Show </label>
+    <!-- Sign in Form -->
+    <EditForm EditContext="editContext" OnValidSubmit="@HandleLogin" FormName="signInForm">
+        <DataAnnotationsValidator />
+        <ValidationSummary/>
+
+       <div> <!-- Email input field -->
+            <InputText @bind-Value="user.Email" class="form-field" placeholder="Email" />
+                <ValidationMessage For="() => user.Email" />
+       </div>
+
+       <div> <!-- Password input field-->
+            <InputText @bind-Value="user.Password" class="form-field" type="@pwVisibility" placeholder="Password" />
+                <ValidationMessage For="() => user.Password" />
+       </div>
+
+        <div>
+            <!-- Sign In button -->
+            <Button type="ButtonType.Submit" Color="ButtonColor.Primary">Sign In</Button>
+            
+            <!-- Clear Form button -->
+            <Button Color="ButtonColor.Secondary" @onclick="HandleClearForm">Clear Form</Button>
         </div>
-    </p>
-    <!--The buttons to sign in and to clear the input from the text fields-->
-    <input type="submit" value="Sign In" @onclick="HandleLogin" class="btn btn-login" /> <button class="btn btn-clear" @onclick="()=> {user = new();}">Clear Form</button>
-
+    </EditForm>
+    <!-- CheckBox for toggling password visibility -->
+    <div id="chkbx">
+        <input type="checkbox" id="show-password" @onclick="@(() => { showPassword = !showPassword; pwVisibility = showPassword ? "text" : "password"; })">
+        <label for="show-password"> Show </label>
+    </div>
     <p><i>Don't have an account?</i> <a href="/signup">Sign Up</a> </p>
-
 </div>
 
-
 @code {
+    private EditContext? editContext;
+    private ValidationMessageStore? messageStore;
     private User user = new User();
 
     private bool showPassword = false;
+    private string pwVisibility = "password";
     private string email = "";
     private string password = "";
+
+    private ScreenModal modal = default!;
 
     #region[METHODS]
 
     protected override async Task OnInitializedAsync()
     {
-        Console.WriteLine("Loading Page");
+        HandleClearForm();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var currentUser = await _storage.GetAsync<User>("currentUser");
+            if (currentUser is not null)
+            {
+                Console.WriteLine($"user is now: {currentUser?.FirstName}");
+                _nav.NavigateTo("/funeral-selection");
+            }
+        }
     }
 
     private async Task HandleLogin()
     {
-        Console.WriteLine("Logging In");
+        var result = await _user.LoginUser(user.Email, user.Password);
+
+        if (result is not null)
+        {
+            await _storage.SetAsync("currentUser", result);
+
+            _nav.NavigateTo("/funeral-selection");
+        }
+        else
+            await modal.OnShowModalClick();
+    }
+
+    private void HandleClearForm()
+    {
+        user = new(); 
+        user.FirstName = "placeholder";
+        user.ConfirmPassword = "placeholder";
+        editContext = new EditContext(user);
     }
     #endregion
 }

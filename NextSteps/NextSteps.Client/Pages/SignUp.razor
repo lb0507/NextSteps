@@ -1,0 +1,145 @@
+﻿@*
+    User Sign-Up Page
+    3/13/2026
+    ======================================
+    - Initial page creation
+    - Added Sign Up funcitonality and input field validation
+    ======================================
+*@
+
+@using BlazorBootstrap
+@using DataLibrary;
+@using DataLibrary.Models;
+@using DataLibrary.ServiceLayer.UserService;
+@using System.ComponentModel.DataAnnotations;
+@using NextSteps.Client.Components
+@using NextSteps.Client.Shared
+
+<!-- Injections -->
+@inject IUserService _user
+@inject BrowserStorageService _storage
+@inject NavigationManager _nav
+
+<!-- Allows user to interact -->
+@rendermode InteractiveServer
+
+<!-- Override MainLayout from Server and use Client's Custom Layout-->
+@layout CustomLayout
+
+<!-- Link to the page -->
+@page "/signup"
+
+<!-- Screen Message Modal for account creation errors -->
+<ScreenModal @ref="modal" TitleText="@modalTitle" BodyText="@modalBody" />
+
+<div class="page-container">
+
+    <!-- Page Headers -->
+    <h1>Sign-Up</h1>
+
+    <!-- Sign in Form -->
+    <EditForm EditContext="editContext" OnValidSubmit="HandleRegister" FormName="signInForm">
+        <DataAnnotationsValidator />
+
+        <div>
+            <!-- First Name input field -->
+            <InputText @bind-Value="user.FirstName" class="form-field" placeholder="First Name" />
+            <ValidationMessage For="() => user.FirstName" />
+        </div>
+
+        <div>
+            <!-- Last Name input field -->
+            <InputText @bind-Value="user.LastName" class="form-field" placeholder="Last Name" />
+            <ValidationMessage For="() => user.LastName" />
+        </div>
+
+        <div>
+            <!-- Email input field -->
+            <InputText @bind-Value="user.Email" class="form-field" placeholder="Email" />
+            <ValidationMessage For="() => user.Email" />
+        </div>
+
+        <div>
+            <!-- Password input field-->
+            <InputText @bind-Value="user.Password" class="form-field" type="@pwVisibility" placeholder="Password" />
+            <ValidationMessage For="() => user.Password" />
+        </div>
+
+        <div>
+            <!-- Password input confirmation field-->
+            <InputText @bind-Value="user.ConfirmPassword" class="form-field" type="@pwVisibility" placeholder="Confirm Password" />
+            <ValidationMessage For="() => user.ConfirmPassword" />
+        </div>
+
+        <!--A checkbox; if checked off, the input in the password field is visible-->
+        <div id="chkbx">
+            <input type="checkbox" id="show-password" @onclick="@(() => { showPassword = !showPassword; pwVisibility = showPassword ? "text" : "password"; })">
+            <label for="show-password"> Show </label>
+        </div>
+
+        <div>
+            <!-- Register button -->
+            <Button type="ButtonType.Submit" Color="ButtonColor.Primary">Register</Button>
+            
+            <!-- Clear Form button -->
+            <Button Color="ButtonColor.Secondary" @onclick="() => { user = new(); editContext = new EditContext(user); }">Clear Form</Button>
+        </div>
+    </EditForm>
+
+    <p><i>Already have an account?</i> <a href="/">Sign In</a> </p>
+
+</div>
+
+
+@code {
+
+    private EditContext? editContext;
+    private ValidationMessageStore? messageStore;
+    private User user = new User();
+
+    private bool showPassword = false;
+    private string pwVisibility = "password";
+
+    private ScreenModal modal = default!;
+    private string modalTitle = string.Empty;
+    private string modalBody = string.Empty;
+
+
+    #region[METHODS]
+
+    protected override async Task OnInitializedAsync()
+    {
+        editContext = new EditContext(user);
+    }
+
+    private async Task HandleRegister()
+    {
+        var emailExists = await _user.ValidateEmail(user.Email);
+
+        if (emailExists)
+        {
+            modalTitle = "Registration Failed";
+            modalBody = "An account already exists with the entered email.";
+            await modal.OnShowModalClick();
+        }
+        else
+        {
+            var result = await _user.RegisterUser(user);
+
+            if (result is not null)
+            {
+                user = new();
+                _nav.NavigateTo("/funeral-selection");
+            }
+            else
+            {
+                modalTitle = "Registration Failed";
+                modalBody = "An error occurred during account creation. Please check your credentials and try again.";
+                await modal.OnShowModalClick();
+            }
+        }
+
+       
+    }
+    #endregion
+}

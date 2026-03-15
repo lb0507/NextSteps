@@ -1,0 +1,257 @@
+﻿@*
+    Task Add/Modify Page
+    3/14/2026
+    ======================================
+    - Initial page creation
+    ======================================
+*@
+
+@using BlazorBootstrap
+@using DataLibrary.Models;
+@using DataLibrary.ServiceLayer.TaskService;
+@using DataLibrary.ServiceLayer.FuneralService;
+@using NextSteps.Client.Components
+@using NextSteps.Client.Shared
+
+<!-- Inject Services -->
+@inject NavigationManager _nav
+@inject BrowserStorageService _storage
+@inject ITaskService _task
+@inject IFuneralService _funeral
+
+<!-- Allows user to interact -->
+@rendermode InteractiveServer
+
+<!-- Override MainLayout from Server and use Client's Custom Layout-->
+@layout CustomLayout
+
+@page "/add-task/{category}"
+@page "/task/{taskId:guid}"
+
+<!-- Screen Message Modal -->
+<ScreenModal @ref="modal" TitleText="@modalTitle" BodyText="@modalBody" URL="@modalURL"/>
+
+<div class="page-container">
+    
+    @if (taskId is null)
+    {
+        <h3>Add Task</h3>
+    }
+    else
+    {
+        <h3>Task Details</h3>
+    }
+
+    <table>
+
+        <colgroup>
+            <col span="1" style="width: 15%" />
+        </colgroup>
+        <colgroup>
+            <col span="1" style="width: 85%" />
+        </colgroup>
+
+        <!-- TASK NUMBER -->
+        <tr>
+            <td>
+                <label>Task Number</label>
+            </td>
+
+            <td>
+                <!-- Display the Task Number -->
+                @if (taskId is null)
+                {
+                    <input type="text"
+                           readonly
+                           value="Provided by System" />
+                }
+                else
+                {
+                    <input type="text"
+                           readonly
+                           @bind="task.TaskNumber" />
+                }
+            </td>
+        </tr>
+
+        <!-- TASK DESCRIPTION -->
+        <tr>
+            <td>
+                <label>Task Description</label>
+            </td>
+
+            <td>
+                <!-- Input field for the Task Description -->
+                <input type="text"
+                       @bind="task.Description" />
+            </td>
+        </tr>
+
+        <!-- TASK CATEGORY -->
+        <tr>
+            <td>
+                <label>Task Category</label>
+            </td>
+
+            <td>
+                @if (category is null)
+                {
+                    <input type="text"
+                           readonly
+                           value="@task.Category" />
+                }
+                else
+                {
+                    <input type="text"
+                           readonly
+                           value=@(category) />
+                }
+            </td>
+        </tr>
+        
+        <!-- TASK STATUS -->
+        <tr>
+            <td>
+                <label>Task Status</label>
+            </td>
+
+            <td>
+                <!-- Selection menu for the Task Status -->
+                <select @bind="@task.IsComplete">
+                    <option value="false">Incomplete</option>
+                    <option value="true">Completed</option>
+                </select>
+            </td>
+        </tr>
+
+        <!-- TASK CREATION DATE -->
+        <tr>
+            <td>
+                <label>Creation Date</label>
+            </td>
+
+            <td>
+                <!-- Display the Creation Date -->
+                @if (taskId is null)
+                {
+                    <input type="text"
+                           readonly
+                           value="Provided by System" />
+                }
+                else
+                {
+                    <input type="text"
+                           readonly
+                           value=@(task.CreationDate.ToString("dd MMM yyyy HH:mm")) />
+                }
+            </td>
+        </tr>
+
+        <!-- TASK COMPLETION DATE -->
+        <tr>
+            <td>
+                <label>Completion Date</label>
+            </td>
+
+            <td>
+                <!-- Time Picker Input for the Completion Date -->
+                <input type="date"
+                       @bind="@task.CompletionDate"
+                       ShowSeconds="false" />
+            </td>
+        </tr>
+
+    </table>
+
+    <div>
+        <Button Type="ButtonType.Link" Color="ButtonColor.Secondary" To="@($"/{category ?? task.Category}")">Back</Button>
+        <Button Color="ButtonColor.Primary" @onclick="HandleSave">Save Task</Button>
+   </div>
+
+</div>
+
+@code {
+    [Parameter]
+    public Guid? taskId { get; set; }
+
+    [Parameter]
+    public string? category { get; set; }
+
+    private NsTask task = new(); 
+
+    private User currentUser = new();
+
+    private Funeral currentFuneral = new();
+
+    #region[MODAL]
+    private ScreenModal modal = default!;
+    private string modalTitle = string.Empty;
+    private string modalBody = string.Empty;
+    private string modalURL = string.Empty;
+    #endregion
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            currentUser = await _storage.GetAsync<User>("currentUser") ?? new();
+
+            // Check if the user is signed in. If not, navigate them to the Sign In page
+            if (currentUser is null)
+                _nav.NavigateTo("/");
+
+            currentFuneral = await _storage.GetAsync<Funeral>("currentFuneral") ?? new();
+
+            // If a TaskId was passed in through the URL, use it to pull the Task object
+            if (taskId is not null)
+                task = await _task.GetTask(taskId ?? Guid.Empty) ?? new();
+
+            StateHasChanged();
+        }
+    }
+
+    // Create or Update the Task
+    private async Task HandleSave()
+    {
+        // Display an error message to the user if they attempt to save a Task without entering a description
+        if (string.IsNullOrWhiteSpace(task.Description))
+        {
+            modalTitle = "Error";
+            modalBody = "Task description cannot be empty. Please enter a description and try again.";
+            modalURL = string.Empty;
+            await modal.OnShowModalClick();
+            return;
+        }
+
+        if (taskId is null)
+        {
+            task.FuneralId = currentFuneral.FuneralId;
+            task.Category = category ?? "Uncategorized";
+            task.TaskNumber = $"Task-{currentFuneral.NumberOfTasks + 1}";
+        }
+
+        // Create or Update the Task
+        var result = await _task.SaveTask(task);
+
+        if (result is not null)
+        {
+            // Update the number of tasks for the funeral if the task is new
+            if (taskId is null)
+                currentFuneral = await _funeral.UpdateTaskNumber(currentFuneral) ?? new();
+
+            // Display success message to user and redirect them back to the category page
+            modalTitle = "Save Successful";
+            modalBody = "The task has been saved successfully.";
+            modalURL = $"/{result.Category}";
+            await modal.OnShowModalClick();
+        }
+        else
+        {
+            // Display error message to user
+            modalTitle = "Error";
+            modalBody = "An error occurred and the task was not saved.";
+            modalURL = string.Empty;
+            await modal.OnShowModalClick();
+        }
+    }
+}

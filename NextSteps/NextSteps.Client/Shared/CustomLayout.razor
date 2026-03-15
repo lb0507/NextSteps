@@ -1,0 +1,17 @@
+﻿@using NextSteps.Client.Components
+
+@inherits LayoutComponentBase
+
+<div class="page">
+    <main>
+        <div class="top-row px-4" style="background-color: midnightblue; display: inline-flex; justify-content: space-between; vertical-align: middle; width: 100%; height: 10vh">
+            <text style="color: white;">NextSteps</text>
+            <SignOutButton/>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+

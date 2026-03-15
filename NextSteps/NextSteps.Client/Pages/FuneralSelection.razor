@@ -1,0 +1,194 @@
+﻿@*
+    Funeral Selection Page
+    3/15/2026
+    ======================================
+    - Initial page creation
+    - Added Grid component
+    - Added Create Funeral functionality
+    ======================================
+*@
+
+@using BlazorBootstrap
+@using DataLibrary.Models;
+@using DataLibrary.ServiceLayer.FuneralService;
+@using DataLibrary.ServiceLayer.UserService;
+@using NextSteps.Client.Components
+@using NextSteps.Client.Shared
+
+<!-- Inject Services -->
+@inject NavigationManager _nav
+@inject BrowserStorageService _storage
+@inject IFuneralService _funeral
+@inject IUserService _user
+
+<!-- Allows user to interact -->
+@rendermode InteractiveServer
+
+<!-- Override MainLayout from Server and use Client's Custom Layout-->
+@layout CustomLayout
+
+@page "/funeral-selection"
+
+<!-- Modal for Adding new Funerals -->
+<Modal @ref="modal" Title="Add New Funeral Service">
+    <BodyTemplate>
+
+        <label>
+            Name of Deceased:
+        </label>
+
+        <input @bind="name" />
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Secondary" @onclick="OnHideModalClick">Back</Button>
+        <Button Color="ButtonColor.Primary" @onclick="HandleFuneralCreate">Create</Button>
+    </FooterTemplate>
+</Modal>
+
+<!-- Screen Message Modal for Funeral creation errors -->
+<ScreenModal @ref="errorModal" TitleText="Error" BodyText="An error occurred during creation of the Funeral. Please validate your input and try again." />
+
+<div class="page-container">
+
+    <!-- Page Headers -->
+    <h1>Funeral Selection</h1>
+
+    <!-- Table of Funeral objects -->
+    <Grid TItem="Funeral"
+          @ref="grid"
+          AllowFiltering="true"
+          AllowPaging="true"
+          AllowSorting="true"
+          AllowSelection="true"
+          AllowDetailView="true"
+          AllowRowClick="true"
+          OnRowDoubleClick="OnRowDoubleClick"
+          Class="table table-hover table-bordered table-striped"
+          DataProvider="FuneralsDataProvider"
+          PageSize="10"
+          Responsive="true"
+          RowKeySelector="(funeral) => funeral.FuneralId"
+          SelectedItemsChanged="OnSelectedItemsChanged"
+          SelectionMode="GridSelectionMode.Multiple">
+
+        <GridColumns>
+            <!-- Name of Deceased Column -->
+            <GridColumn TItem="Funeral" HeaderText="Deceased" PropertyName="DeceasedName" SortKeySelector="item => item.DeceasedName">
+                @context.DeceasedName
+            </GridColumn>
+
+            <!-- Location Column -->
+            <GridColumn TItem="Funeral" HeaderText="Location" PropertyName="Location" SortKeySelector="item => item.Location">
+                @context.Location
+            </GridColumn>
+
+            <!-- Date of Service Column -->
+            <GridColumn TItem="Funeral" HeaderText="Service Date" PropertyName="DateOfService" SortKeySelector="item => item.DateOfService">
+                @(context.DateOfService?.ToString("dd MMM yyyy") ?? string.Empty)
+            </GridColumn>     
+            
+        </GridColumns>
+
+    </Grid>
+
+    <Button Color="ButtonColor.Primary" @onclick="OnShowModalClick">Add Funeral</Button>
+
+</div>
+
+@code {
+
+    private List<Funeral> Funerals = new();
+
+    private User currentUser = new();
+
+    private ScreenModal errorModal = default!;
+    private Modal modal = default!;
+    private string name = "";
+
+    #region [GRID]
+
+    private BlazorBootstrap.Grid<Funeral>? grid;
+
+    private HashSet<Funeral> selectedFunerals = new();
+
+    private async Task<GridDataProviderResult<Funeral>> FuneralsDataProvider(GridDataProviderRequest<Funeral> request) => await Task.FromResult(request.ApplyTo(Funerals));
+
+    private Task OnSelectedItemsChanged(HashSet<Funeral> funerals)
+    {
+        selectedFunerals = funerals is not null && funerals.Any() ? funerals : new();
+        return Task.CompletedTask;
+    }
+
+    private async Task OnRowDoubleClick(GridRowEventArgs<Funeral> args)
+    {
+        await _storage.SetAsync("currentFuneral", args.Item);
+
+        _nav.NavigateTo("/funeral");
+    }
+
+    #endregion
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            currentUser = await _storage.GetAsync<User>("currentUser") ?? new();
+
+            // Check if the user is signed in. If not, navigate them to the Sign In page
+            if (currentUser is null)
+            {
+                _nav.NavigateTo("/");
+            }
+            else
+            {
+                // Clear the selected Funeral
+                await _storage.RemoveAsync("currentFuneral");
+
+                Funerals = await _funeral.GetFunerals(currentUser?.UserId ?? Guid.Empty);
+
+                // Refresh the grid
+                if(grid is not null)
+                    await grid.RefreshDataAsync();
+
+            }
+        }
+
+    }
+
+    private async Task HandleFuneralCreate()
+    {
+        Console.WriteLine($"currentUser.UserId: {currentUser.UserId}");
+        var result = await _funeral.CreateFuneral
+        (
+            new Funeral
+            {
+                DeceasedName = name,
+                UserId = currentUser.UserId
+            }
+        );
+
+        if (result is not null)
+        {
+            Funerals.Add(result);
+
+            // Refresh the grid
+            if (grid is not null)
+                await grid.RefreshDataAsync();
+            await OnHideModalClick();
+        }
+        else
+        {
+            await OnHideModalClick();
+            await errorModal.OnShowModalClick();
+        }   
+    }
+
+    private async Task OnShowModalClick() => await modal.ShowAsync();
+
+    private async Task OnHideModalClick()
+    {
+        name = string.Empty;
+        await modal.HideAsync();
+        await Task.CompletedTask;
+    }
+}

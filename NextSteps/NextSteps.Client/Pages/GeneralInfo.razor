@@ -1,0 +1,152 @@
+﻿@*
+    General Info Page
+    3/14/2026
+    ======================================
+    - Initial page creation
+    ======================================
+    Category page for General Funeral Information
+*@
+
+@using BlazorBootstrap
+@using DataLibrary.Models;
+@using DataLibrary.ServiceLayer.TaskService;
+@using NextSteps.Client.Components
+@using NextSteps.Client.Shared
+
+<!-- Inject Services -->
+@inject NavigationManager _nav
+@inject BrowserStorageService _storage
+@inject ITaskService _task
+
+<!-- Allows user to interact -->
+@rendermode InteractiveServer
+
+<!-- Override MainLayout from Server and use Client's Custom Layout-->
+@layout CustomLayout
+
+@page "/General Info"
+
+<div class="page-container">
+
+    <h3>General Info</h3>
+
+    <Button Type="ButtonType.Link" To="/funeral">Back to Category Selection</Button>
+
+    <div class="tabs-container">
+        <Tabs>
+            <Tab Title="Tasks">
+                <Content>
+
+                    <!-- Task Table -->
+                    <div class="table-container">
+
+                        <!-- Table of Task objects -->
+                        <Grid TItem="NsTask"
+                              @ref="grid"
+                              AllowFiltering="true"
+                              AllowPaging="true"
+                              AllowSorting="true"
+                              AllowSelection="true"
+                              AllowDetailView="true"
+                              AllowRowClick="true"
+                              OnRowDoubleClick="OnRowDoubleClick"
+                              Class="table table-hover table-bordered table-striped"
+                              DataProvider="TasksDataProvider"
+                              PageSize="10"
+                              Responsive="true"
+                              RowKeySelector="(task) => task.TaskId"
+                              SelectedItemsChanged="OnSelectedItemsChanged"
+                              SelectionMode="GridSelectionMode.Multiple">
+
+                            <GridColumns>
+                                <!-- Task Number Column -->
+                                <GridColumn TItem="NsTask" HeaderText="Task Number" PropertyName="TaskNumber" SortKeySelector="item => item.TaskNumber">
+                                    @context.TaskNumber
+                                </GridColumn>
+
+                                <!-- Description Column -->
+                                <GridColumn TItem="NsTask" HeaderText="Description" PropertyName="Description" SortKeySelector="item => item.Description">
+                                    @context.Description
+                                </GridColumn>
+
+                                <!-- Status Column -->
+                                <GridColumn TItem="NsTask" HeaderText="Status" PropertyName="IsComplete" SortKeySelector="item => item.IsComplete">
+                                    @(context.IsComplete ? "Completed" : "Incomplete")
+                                </GridColumn>
+            
+                            </GridColumns>
+
+                        </Grid>
+
+                    </div>
+
+                    <Button Color="ButtonColor.Primary" To="/add-task/General Info">Add Task</Button>
+                </Content>
+            </Tab>
+
+            <Tab Title="Info">
+                <Content>
+
+                </Content>
+            </Tab>
+
+        </Tabs>
+    </div> 
+    
+
+</div>
+
+@code {
+
+    private Funeral currentFuneral = new();
+
+    private User currentUser = new();
+
+    #region [GRID]
+
+    private BlazorBootstrap.Grid<NsTask>? grid;
+
+    private List<NsTask> Tasks = new();
+
+    private HashSet<NsTask> selectedTasks = new();
+
+    private async Task<GridDataProviderResult<NsTask>> TasksDataProvider(GridDataProviderRequest<NsTask> request) => await Task.FromResult(request.ApplyTo(Tasks));
+ 
+    private Task OnSelectedItemsChanged(HashSet<NsTask> tasks)
+    {
+        selectedTasks = tasks is not null && tasks.Any() ? tasks : new();
+        return Task.CompletedTask;
+    }
+
+    // On Clicking a row in the table, navigate to the details page of that corresponding Task
+    private async Task OnRowDoubleClick(GridRowEventArgs<NsTask> args) => _nav.NavigateTo($"/task/{args.Item.TaskId}");
+
+    #endregion
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            currentUser = await _storage.GetAsync<User>("currentUser") ?? new();
+
+            // Check if the user is signed in. If not, navigate them to the Sign In page
+            if (currentUser is null)
+            {
+                _nav.NavigateTo("/");
+            }
+            else
+            {
+                // Get the selected Funeral from browser storage
+                currentFuneral = await _storage.GetAsync<Funeral>("currentFuneral") ?? new();
+
+                // Fetch the tasks for this category and Funeral
+                Tasks = await _task.GetTasksByCategory(currentFuneral.FuneralId, "General Info");
+
+                // Refresh the grid
+                if (grid is not null)
+                    await grid.RefreshDataAsync();
+            }
+        }
+        StateHasChanged();
+    }
+}

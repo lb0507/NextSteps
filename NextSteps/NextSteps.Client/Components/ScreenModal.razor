@@ -1,0 +1,54 @@
+﻿@*
+    ScreenModal Component
+    3/14/2026
+    ======================================
+    - Initial page creation
+    - Added optional page navigation after close
+    ======================================
+*@
+
+@using BlazorBootstrap
+
+@inject NavigationManager _nav
+
+<Modal @ref="modal" Title=@TitleText>
+    <BodyTemplate>
+        @BodyText
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Secondary" @onclick="OnHideModalClick">Close</Button>
+    </FooterTemplate>
+</Modal>
+
+@code {
+
+    [Parameter]
+    public string TitleText { get; set; } = string.Empty;
+
+    [Parameter]
+    public string BodyText { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public string? URL { get; set; }
+
+    private Modal modal = default!;
+
+    public async Task OnShowModalClick()
+    {
+        await modal.ShowAsync();
+    }
+
+    private async Task OnHideModalClick()
+    {
+        await modal.HideAsync();
+
+        // If a URL was passed in, navigate to it after hiding the modal
+        if (!string.IsNullOrEmpty(URL))
+        {
+            _nav.NavigateTo(URL);
+        }
+    }
+}
