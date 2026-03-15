@@ -361,3 +361,5 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/NextSteps/NextSteps/appsettings.json
+/NextSteps/NextSteps.Client/wwwroot/appsettings.json
