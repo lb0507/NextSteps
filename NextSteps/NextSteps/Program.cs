@@ -1,4 +1,5 @@
 using DataLibrary.ServiceLayer.FuneralService;
+using DataLibrary.ServiceLayer.NoteService;
 using DataLibrary.ServiceLayer.TaskService;
 using DataLibrary.ServiceLayer.UserService;
 using NextSteps.Client;
@@ -28,6 +29,7 @@ namespace NextSteps
             builder.Services.AddScoped<IUserService, UserService>();// add User API services
             builder.Services.AddScoped<IFuneralService, FuneralService>();// add Funeral API services
             builder.Services.AddScoped<ITaskService, TaskService>();// add Task API services
+            builder.Services.AddScoped<INoteService, NoteService>();// add Note API services
 
             var app = builder.Build();
 

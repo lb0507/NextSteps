@@ -1,0 +1,111 @@
+﻿@*
+    Task Table Component
+    3/15/2026
+    ======================================
+    - Initial page creation
+    ======================================
+*@
+
+@using BlazorBootstrap
+@using DataLibrary.Models
+@using DataLibrary.ServiceLayer.TaskService
+
+@inject NavigationManager _nav
+@inject BrowserStorageService _storage
+@inject ITaskService _task
+
+<div class="task-table-container">
+
+    <!-- Task Table -->
+    <div class="table-container">
+
+        <!-- Table of Task objects -->
+        <Grid TItem="NsTask"
+              @ref="grid"
+              AllowFiltering="true"
+              AllowPaging="true"
+              AllowSorting="true"
+              AllowSelection="true"
+              AllowRowClick="true"
+              OnRowDoubleClick="OnRowDoubleClick"
+              Class="table table-hover table-bordered table-striped"
+              DataProvider="TasksDataProvider"
+              PageSize="10"
+              Responsive="true"
+              RowKeySelector="(task) => task.TaskId"
+              SelectedItemsChanged="OnSelectedItemsChanged"
+              SelectionMode="GridSelectionMode.Multiple">
+
+            <GridColumns>
+                <!-- Task Number Column -->
+                <GridColumn TItem="NsTask" HeaderText="Task Number" PropertyName="TaskNumber" SortKeySelector="item => item.TaskNumber">
+                    @context.TaskNumber
+                </GridColumn>
+
+                <!-- Description Column -->
+                <GridColumn TItem="NsTask" HeaderText="Description" PropertyName="Description" SortKeySelector="item => item.Description">
+                    @context.Description
+                </GridColumn>
+
+                <!-- Status Column -->
+                <GridColumn TItem="NsTask" HeaderText="Status" PropertyName="IsComplete" SortKeySelector="item => item.IsComplete">
+                    @(context.IsComplete ? "Completed" : "Incomplete")
+                </GridColumn>
+            
+            </GridColumns>
+
+        </Grid>
+
+    </div>
+
+    <Button Color="ButtonColor.Primary" Type="ButtonType.Link" To="/add-task/General Info">Add Task</Button>
+
+</div>
+
+@code {
+
+    [Parameter, EditorRequired]
+    public Guid FuneralId { get; set; }
+
+    [Parameter, EditorRequired]
+    public string Category { get; set; }
+
+    // [Parameter, EditorRequired]
+    // public List<NsTask> Tasks { get; set; }
+
+    // [Parameter, EditorRequired]
+    // public BlazorBootstrap.Grid<NsTask>? Grid { get; set; }
+
+
+    #region [GRID]
+
+    private List<NsTask> Tasks = new();
+    private BlazorBootstrap.Grid<NsTask>? grid;
+
+    private HashSet<NsTask> selectedTasks = new();
+
+    private async Task<GridDataProviderResult<NsTask>> TasksDataProvider(GridDataProviderRequest<NsTask> request) => await Task.FromResult(request.ApplyTo(Tasks));
+
+    private Task OnSelectedItemsChanged(HashSet<NsTask> tasks)
+    {
+        selectedTasks = tasks is not null && tasks.Any() ? tasks : new();
+        return Task.CompletedTask;
+    }
+
+    // On Clicking a row in the table, navigate to the details page of that corresponding Task
+    private async Task OnRowDoubleClick(GridRowEventArgs<NsTask> args) => _nav.NavigateTo($"/task/{args.Item.TaskId}");
+
+    #endregion
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+
+        // Fetch the tasks for this category and Funeral
+        Tasks = await _task.GetTasksByCategory(FuneralId, Category);
+
+        // Refresh the grid
+        if (grid is not null)
+            await grid.RefreshDataAsync();
+    }
+}

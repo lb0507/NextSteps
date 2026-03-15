@@ -126,13 +126,6 @@ namespace DataLibrary.ServiceLayer.FuneralService
 
         public async Task<NsTask?> SaveTask(NsTask task)
         {
-            // If the Task is new, populate the Id, Number, and Date of Creation
-            if (task.TaskId == Guid.Empty)
-            {
-                task.TaskId = Guid.NewGuid();
-                task.CreationDate = DateTime.Now;
-            }
-
             try
             {
                 using (SqlConnection conn = new SqlConnection(_config.GetConnectionString("AzureSql")))

@@ -10,6 +10,7 @@
 @using DataLibrary.Models;
 @using DataLibrary.ServiceLayer.TaskService;
 @using DataLibrary.ServiceLayer.FuneralService;
+@using DataLibrary.ServiceLayer.NoteService;
 @using NextSteps.Client.Components
 @using NextSteps.Client.Shared
 
@@ -18,6 +19,7 @@
 @inject BrowserStorageService _storage
 @inject ITaskService _task
 @inject IFuneralService _funeral
+@inject INoteService _notes
 
 <!-- Allows user to interact -->
 @rendermode InteractiveServer
@@ -31,142 +33,232 @@
 <!-- Screen Message Modal -->
 <ScreenModal @ref="modal" TitleText="@modalTitle" BodyText="@modalBody" URL="@modalURL"/>
 
-<div class="page-container">
-    
-    @if (taskId is null)
-    {
-        <h3>Add Task</h3>
-    }
-    else
-    {
-        <h3>Task Details</h3>
-    }
 
-    <table>
+<!-- Modal for view Notes attached to the Task -->
+<Modal @ref="notesModal" Title="@(newNote? "New Note" : "Task Note")" 
+    IsVerticallyCentered
+    Size="ModalSize.Large"
+    Class="note-modal">
+    <BodyTemplate>
 
-        <colgroup>
-            <col span="1" style="width: 15%" />
-        </colgroup>
-        <colgroup>
-            <col span="1" style="width: 85%" />
-        </colgroup>
+        @if (newNote)
+        {
+            <div class="modal-body">
+                <textarea class="notes-desc-input"
+                          @bind="newNoteText"
+                          rows="8"/>
+            </div>
+        }
+        else
+        {
+            <div class="modal-body">
+                <textarea class="notes-desc-input"
+                          @bind="selectedNote.NoteText" 
+                          rows="8" />
+            </div>
 
-        <!-- TASK NUMBER -->
-        <tr>
-            <td>
-                <label>Task Number</label>
-            </td>
+            <div class="modal-body">
+                <label>Creation Date:</label>
+                <span>@selectedNote.CreationDate.ToString("dd MMM yyyy HH:mm")</span>
+            </div>
+        }
 
-            <td>
-                <!-- Display the Task Number -->
-                @if (taskId is null)
-                {
-                    <input type="text"
-                           readonly
-                           value="Provided by System" />
-                }
-                else
-                {
-                    <input type="text"
-                           readonly
-                           @bind="task.TaskNumber" />
-                }
-            </td>
-        </tr>
-
-        <!-- TASK DESCRIPTION -->
-        <tr>
-            <td>
-                <label>Task Description</label>
-            </td>
-
-            <td>
-                <!-- Input field for the Task Description -->
-                <input type="text"
-                       @bind="task.Description" />
-            </td>
-        </tr>
-
-        <!-- TASK CATEGORY -->
-        <tr>
-            <td>
-                <label>Task Category</label>
-            </td>
-
-            <td>
-                @if (category is null)
-                {
-                    <input type="text"
-                           readonly
-                           value="@task.Category" />
-                }
-                else
-                {
-                    <input type="text"
-                           readonly
-                           value=@(category) />
-                }
-            </td>
-        </tr>
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Secondary" @onclick="OnHideModalClick">Close</Button>
         
-        <!-- TASK STATUS -->
-        <tr>
-            <td>
-                <label>Task Status</label>
-            </td>
+        @if (newNote)
+        {
+            <Button Color="ButtonColor.Primary" @onclick="HandleAttachNote">Save</Button>
+        }
+        else
+        {
+            <Button Color="ButtonColor.Danger" @onclick="HandleNoteDeletion">Delete</Button>
+        }
 
-            <td>
-                <!-- Selection menu for the Task Status -->
-                <select @bind="@task.IsComplete">
-                    <option value="false">Incomplete</option>
-                    <option value="true">Completed</option>
-                </select>
-            </td>
-        </tr>
+    </FooterTemplate>
+</Modal>
 
-        <!-- TASK CREATION DATE -->
-        <tr>
-            <td>
-                <label>Creation Date</label>
-            </td>
 
-            <td>
-                <!-- Display the Creation Date -->
-                @if (taskId is null)
-                {
-                    <input type="text"
-                           readonly
-                           value="Provided by System" />
-                }
-                else
-                {
-                    <input type="text"
-                           readonly
-                           value=@(task.CreationDate.ToString("dd MMM yyyy HH:mm")) />
-                }
-            </td>
-        </tr>
+<div class="page-container" style="display: flex; width: 100%;  height: 85vh;">
+    
+    <div class="task-details" style=" width: 70%; border-right: 1px solid midnightblue; height: 100%">
 
-        <!-- TASK COMPLETION DATE -->
-        <tr>
-            <td>
-                <label>Completion Date</label>
-            </td>
+        @if (taskId is null)
+        {
+            <h3>Add Task</h3>
+        }
+        else
+        {
+            <h3>Task Details</h3>
+        }
 
-            <td>
-                <!-- Time Picker Input for the Completion Date -->
-                <input type="date"
-                       @bind="@task.CompletionDate"
-                       ShowSeconds="false" />
-            </td>
-        </tr>
+        <table style="width: 98%;">
 
-    </table>
+            <colgroup>
+                <col span="1" style="width: 16%" />
+            </colgroup>
+            <colgroup>
+                <col span="1" style="width: 84%" />
+            </colgroup>
 
-    <div>
-        <Button Type="ButtonType.Link" Color="ButtonColor.Secondary" To="@($"/{category ?? task.Category}")">Back</Button>
-        <Button Color="ButtonColor.Primary" @onclick="HandleSave">Save Task</Button>
-   </div>
+            <!-- TASK NUMBER -->
+            <tr>
+                <td>
+                    <label>Task Number</label>
+                </td>
+
+                <td>
+                    <!-- Display the Task Number -->
+                    @if (taskId is null)
+                    {
+                        <input type="text"
+                               readonly
+                               value="Provided by System" />
+                    }
+                    else
+                    {
+                        <input type="text"
+                               readonly
+                               @bind="task.TaskNumber" />
+                    }
+                </td>
+            </tr>
+
+            <!-- TASK DESCRIPTION -->
+            <tr>
+                <td style="display: flex; vertical-align: top;">
+                    <label>Task Description</label>
+                </td>
+
+                <td>
+                    <!-- Input field for the Task Description -->
+                    <textarea type="text"
+                           @bind="task.Description"
+                           rows="12"
+                           style="width: 100%; resize: none"/>
+                </td>
+            </tr>
+
+            <!-- TASK CATEGORY -->
+            <tr>
+                <td>
+                    <label>Task Category</label>
+                </td>
+
+                <td>
+                    @if (category is null)
+                    {
+                        <input type="text"
+                               readonly
+                               value="@task.Category" />
+                    }
+                    else
+                    {
+                        <input type="text"
+                               readonly
+                               value=@(category) />
+                    }
+                </td>
+            </tr>
+        
+            <!-- TASK STATUS -->
+            <tr>
+                <td>
+                    <label>Task Status</label>
+                </td>
+
+                <td>
+                    <!-- Selection menu for the Task Status -->
+                    <select @bind="@task.IsComplete">
+                        <option value="false">Incomplete</option>
+                        <option value="true">Completed</option>
+                    </select>
+                </td>
+            </tr>
+
+            <!-- TASK CREATION DATE -->
+            <tr>
+                <td>
+                    <label>Creation Date</label>
+                </td>
+
+                <td>
+                    <!-- Display the Creation Date -->
+                    @if (taskId is null)
+                    {
+                        <input type="text"
+                               readonly
+                               value="Provided by System" />
+                    }
+                    else
+                    {
+                        <input type="text"
+                               readonly
+                               value=@(task.CreationDate.ToString("dd MMM yyyy HH:mm")) />
+                    }
+                </td>
+            </tr>
+
+            <!-- TASK COMPLETION DATE -->
+            <tr>
+                <td>
+                    <label>Completion Date</label>
+                </td>
+
+                <td>
+                    <!-- Time Picker Input for the Completion Date -->
+                    <input type="date"
+                           @bind="@task.CompletionDate"
+                           ShowSeconds="false" />
+                </td>
+            </tr>
+
+        </table>
+
+        <div class="task-buttons">
+            <Button Type="ButtonType.Link" Color="ButtonColor.Secondary" To="@($"/{category ?? task.Category}")">Back</Button>
+            <Button Color="ButtonColor.Primary" @onclick="HandleSave">Save Task</Button>
+        </div>
+    </div>
+    
+    <div class="notes-section" style="width: 30%; padding-left: 20px; height: 100%;">
+        <div class="notes-table" style="max-height: 95%; overflow: auto; background-color: lightgray">
+
+            <!-- Table of Notes for this Task-->
+            <Grid TItem="Note"
+                  @ref="grid"
+                  AllowSorting="true"
+                  AllowRowClick="true"
+                  OnRowDoubleClick="OnRowDoubleClick"
+                  Class="table table-hover table-bordered table-striped"
+                  DataProvider="TasksDataProvider"
+                  Responsive="true"
+                  RowKeySelector="(note) => note.NoteId">
+
+                <GridColumns>
+
+                    <!-- Note Text Column -->
+                    <GridColumn TItem="Note" HeaderText="Note Text" PropertyName="NoteText" SortKeySelector="item => item.NoteText" Class="note-col">
+                        @context.NoteText
+                    </GridColumn>
+
+                    <!-- CreationDate Column -->
+                    <GridColumn TItem="Note" HeaderText="Date" PropertyName="CreationDate" SortKeySelector="item => item.CreationDate" Class="date-col">
+                        @(context.CreationDate.ToString("dd MMM yyyy HH:mm"))
+                    </GridColumn>
+            
+                </GridColumns>
+
+            </Grid>
+
+        </div>
+
+        <div class="notes-buttons">
+            <Button Color="ButtonColor.Secondary" @onclick="() => OnShowModalClick(true)">Attach Note</Button>
+        </div>
+
+    </div>
 
 </div>
 
@@ -190,6 +282,26 @@
     private string modalURL = string.Empty;
     #endregion
 
+    #region [GRID]
+
+    private BlazorBootstrap.Grid<Note>? grid;
+
+    private List<Note> Notes = new();
+    private List<Note> NewNotes = new();
+
+    private Note selectedNote = new();
+
+    private async Task<GridDataProviderResult<Note>> TasksDataProvider(GridDataProviderRequest<Note> request) => await Task.FromResult(request.ApplyTo(Notes));
+
+    // On Clicking a row in the table, open a modal displaying the details of the Note
+    private async Task OnRowDoubleClick(GridRowEventArgs<Note> args)
+    {
+        selectedNote = args.Item;
+        await OnShowModalClick(false);
+    }
+
+    #endregion
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -204,7 +316,17 @@
 
             // If a TaskId was passed in through the URL, use it to pull the Task object
             if (taskId is not null)
+            {
+                // Fetch the Task details
                 task = await _task.GetTask(taskId ?? Guid.Empty) ?? new();
+
+                // Fetch the notes attached to this task
+                Notes = await _notes.GetNotes(taskId ?? Guid.Empty);
+
+                // Refresh the Notes grid
+                if (grid is not null)
+                    await grid.RefreshDataAsync();
+            }
 
             StateHasChanged();
         }
@@ -237,7 +359,10 @@
         {
             // Update the number of tasks for the funeral if the task is new
             if (taskId is null)
+            {
                 currentFuneral = await _funeral.UpdateTaskNumber(currentFuneral) ?? new();
+                await _storage.SetAsync("currentFuneral", currentFuneral);
+            }            
 
             // Display success message to user and redirect them back to the category page
             modalTitle = "Save Successful";
@@ -254,4 +379,82 @@
             await modal.OnShowModalClick();
         }
     }
+
+    #region[NOTE/MODAL METHODS]
+
+    private Modal notesModal = default!;
+    private bool newNote = false;
+    private string newNoteText = string.Empty;
+
+    // Show Notes modal, passed boolean determines if it is a Create Note modal or View/Delete Note modal
+    public async Task OnShowModalClick(bool isNew)
+    {
+
+        if (isNew)
+            newNote = true;
+        else
+            newNote = false;
+
+        await notesModal.ShowAsync();
+    }
+
+    // Close Notes modal
+    private async Task OnHideModalClick()
+    {
+        newNoteText = string.Empty;
+        await notesModal.HideAsync();
+    }
+
+    // Create or Update the Task
+    private async Task HandleAttachNote()
+    {
+        // Display an error message to the user if they attempt to save a note without entering any text
+        if (string.IsNullOrWhiteSpace(newNoteText))
+        {
+            modalTitle = "Error";
+            modalBody = "Note cannot be empty. Please enter a note and try again.";
+            modalURL = string.Empty;
+            await modal.OnShowModalClick();
+            return;
+        }
+
+        // Create or Update the Task
+        var result = await _notes.CreateNote
+        (
+            new Note
+            {
+                NoteText = newNoteText,
+                ObjectId = task.TaskId
+            }
+        );
+
+        if (result is not null)
+        {
+            // Hide the modal
+            await OnHideModalClick();
+
+            // Add the New note to the Notes grid
+            Notes.Add(result);
+
+            // Refresh the grid
+            if (grid is not null)
+                await grid.RefreshDataAsync();
+
+        }
+        else
+        {
+            // Display error message to user
+            modalTitle = "Error";
+            modalBody = "An error occurred and the note was not saved.";
+            modalURL = string.Empty;
+            await modal.OnShowModalClick();
+        }
+    }
+
+    private async Task HandleNoteDeletion()
+    {
+        
+    }
+
+    #endregion
 }

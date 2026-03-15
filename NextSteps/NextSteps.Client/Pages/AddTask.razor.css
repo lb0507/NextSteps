@@ -1,1 +1,58 @@
-﻿
+﻿::deep .bb-table {
+    table-layout: fixed;
+}
+    ::deep .bb-table th:nth-child(1),
+    ::deep .bb-table th:nth-child(2) {
+        background-color: dimgray;
+        color: white;
+    }
+    ::deep .bb-table .note-col{
+        width: 80%;
+    }
+    ::deep .bb-table .date-col{
+        width: 20%;
+    }
+
+
+.note-col {
+    width: 20px;
+}
+
+.date-col {
+    width: 80px;
+}
+
+input, select{
+    height: 4vh;
+    width: 22%;
+}
+
+td{
+    height: 5vh;
+}
+
+.task-buttons{
+    position: absolute;
+    display: flex;
+    right: 32%;
+    bottom: 2%;
+    gap: 15px;
+}
+
+.notes-buttons {
+    position: absolute;
+    display: flex;
+    right: 1%;
+    bottom: 2%;
+    gap: 15px;
+}
+
+.modal-body{
+    width: 100%;
+    padding: 10px;
+}
+
+.notes-desc-input {
+    width: 100%;
+    padding: 8px;
+}
