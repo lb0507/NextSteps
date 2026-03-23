@@ -1,8 +1,9 @@
 ﻿/* 
 *    INoteService.cs
-*    3/15/2026
+*    3/21/2026
 *    ======================================
 *    - Initial creation
+*    - Added Note Update and Deletion
 *    ======================================
 *    Interface for Note related Database calls
 *   
@@ -20,5 +21,8 @@ namespace DataLibrary.ServiceLayer.NoteService
 
         // Create and attach a new note to an Object
         Task<Note?> CreateNote(Note note);
+
+        // Delete a note
+        Task<bool> DeleteNote(Guid noteId);
     }
 }

@@ -1,6 +1,5 @@
 ﻿To-do:
 
-- Create Note deletion functionality
 - Debug Task Status selection menu
 - Allow toggling of task status via directly clicking the Status column of a row
 OR

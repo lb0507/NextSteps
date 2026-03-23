@@ -1,10 +1,18 @@
-﻿using DataLibrary.Models;
+﻿/* 
+*    INoteService.cs
+*    3/21/2026
+*    ======================================
+*    - Initial creation
+*    - Added Note Update and Deletion
+*    ======================================
+*    Service Layer for Note related Database calls
+*   
+*/
+
+using DataLibrary.Models;
 using DataLibrary.ServiceLayer.NoteService;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace DataLibrary.ServiceLayer.NoteService
 {
@@ -104,6 +112,34 @@ namespace DataLibrary.ServiceLayer.NoteService
 
 
         // Delete a note
+        public async Task<bool> DeleteNote(Guid noteId)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(_config.GetConnectionString("AzureSql")))
+                {
+                    conn.Open();
+                    SqlCommand cmd = new SqlCommand(
+                        "UPDATE Notes SET IsDeleted = 1 WHERE NoteId = @NoteId", conn);
 
+                    cmd.Parameters.AddWithValue("@NoteId", noteId);
+
+                    if (cmd.ExecuteNonQuery() > 0)
+                        return true;
+                    else
+                        return false;
+                }
+            }
+            catch (SqlException ex)
+            {
+                Console.WriteLine("SQL Error: " + ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("An error occurred: " + ex.Message);
+            }
+
+            return false;
+        }
     }
 }

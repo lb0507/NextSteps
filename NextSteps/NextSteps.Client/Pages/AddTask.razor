@@ -1,8 +1,9 @@
 ﻿@*
     Task Add/Modify Page
-    3/14/2026
+    3/21/2026
     ======================================
     - Initial page creation
+    - Added Note and Task deletion
     ======================================
 *@
 
@@ -75,6 +76,28 @@
         {
             <Button Color="ButtonColor.Danger" @onclick="HandleNoteDeletion">Delete</Button>
         }
+
+    </FooterTemplate>
+</Modal>
+
+
+<!-- Modal for Confirming the Deletion of the Task -->
+<Modal @ref="confirmationModal" Title="Confirm Deletion?"
+       IsVerticallyCentered
+       Size="ModalSize.Regular"
+       >
+    <BodyTemplate>
+
+        <div class="modal-body">
+            <span>Please confirm that you would like to delete this task. This action cannot be undone.</span>
+        </div>
+
+    </BodyTemplate>
+    <FooterTemplate>
+
+        <Button Color="ButtonColor.Secondary" @onclick="confirmationModal.HideAsync">Cancel</Button>
+        
+        <Button Color="ButtonColor.Danger" @onclick="HandleTaskDeletion">Delete</Button>
 
     </FooterTemplate>
 </Modal>
@@ -170,10 +193,19 @@
 
                 <td>
                     <!-- Selection menu for the Task Status -->
-                    <select @bind="@task.IsComplete">
-                        <option value="false">Incomplete</option>
-                        <option value="true">Completed</option>
-                    </select>
+                    <InputSelect style="height: 4vh; width: 15%" @bind-Value="@task.IsComplete">
+                        @* @if (taskStatus == true)
+                        {
+                            <option value=@false>Incomplete</option>
+                            <option value=@true selected>Completed</option>
+                        }
+                        else
+                        { *@
+                            <option value="false">Incomplete</option>
+                            <option value="true">Completed</option>
+                        @* } *@
+                        
+                    </InputSelect>
                 </td>
             </tr>
 
@@ -217,8 +249,16 @@
         </table>
 
         <div class="task-buttons">
+
             <Button Type="ButtonType.Link" Color="ButtonColor.Secondary" To="@($"/{category ?? task.Category}")">Back</Button>
+
+            @if (taskId is not null)
+            {
+                <Button Color="ButtonColor.Danger" @onclick="HandleTaskDeletionConfirmation">Delete Task</Button>
+            }
+            
             <Button Color="ButtonColor.Primary" @onclick="HandleSave">Save Task</Button>
+
         </div>
     </div>
     
@@ -269,7 +309,8 @@
     [Parameter]
     public string? category { get; set; }
 
-    private NsTask task = new(); 
+    private NsTask task = new();
+    private bool taskStatus = false;
 
     private User currentUser = new();
 
@@ -277,6 +318,7 @@
 
     #region[MODAL]
     private ScreenModal modal = default!;
+    private Modal confirmationModal = default!;
     private string modalTitle = string.Empty;
     private string modalBody = string.Empty;
     private string modalURL = string.Empty;
@@ -320,6 +362,8 @@
                 // Fetch the Task details
                 task = await _task.GetTask(taskId ?? Guid.Empty) ?? new();
 
+                Console.WriteLine($"Setting task status to {task.IsComplete}");
+
                 // Fetch the notes attached to this task
                 Notes = await _notes.GetNotes(taskId ?? Guid.Empty);
 
@@ -335,25 +379,32 @@
     // Create or Update the Task
     private async Task HandleSave()
     {
+        Console.WriteLine($"task.IsComplete: {task.IsComplete}");
         // Display an error message to the user if they attempt to save a Task without entering a description
         if (string.IsNullOrWhiteSpace(task.Description))
         {
             modalTitle = "Error";
             modalBody = "Task description cannot be empty. Please enter a description and try again.";
-            modalURL = string.Empty;
             await modal.OnShowModalClick();
             return;
         }
+
+        NsTask? result = null;
 
         if (taskId is null)
         {
             task.FuneralId = currentFuneral.FuneralId;
             task.Category = category ?? "Uncategorized";
             task.TaskNumber = $"Task-{currentFuneral.NumberOfTasks + 1}";
-        }
 
-        // Create or Update the Task
-        var result = await _task.SaveTask(task);
+            // Create the Task
+            result = await _task.CreateTask(task);
+        }
+        else
+        {
+            // Update the Task
+            result = await _task.UpdateTask(task);
+        }
 
         if (result is not null)
         {
@@ -375,7 +426,33 @@
             // Display error message to user
             modalTitle = "Error";
             modalBody = "An error occurred and the task was not saved.";
-            modalURL = string.Empty;
+            await modal.OnShowModalClick();
+        }
+    }
+
+    private async Task HandleTaskDeletionConfirmation() => await confirmationModal.ShowAsync();
+
+    private async Task HandleTaskDeletion()
+    {
+        await confirmationModal.HideAsync();
+
+        var result = await _task.DeleteTask(taskId ?? Guid.Empty);
+
+        if (result)
+        {   // Task Deletion Successful
+
+            // Display confimation message to user
+            modalTitle = "Deletion Confirmed";
+            modalBody = "The task has been deleted.";
+            modalURL = $"/{task.Category}";
+            await modal.OnShowModalClick();
+        }
+        else
+        {   // Task Deletion Failed
+
+            // Display error message to user
+            modalTitle = "Error";
+            modalBody = "An error occurred and the task was not deleted.";
             await modal.OnShowModalClick();
         }
     }
@@ -389,7 +466,6 @@
     // Show Notes modal, passed boolean determines if it is a Create Note modal or View/Delete Note modal
     public async Task OnShowModalClick(bool isNew)
     {
-
         if (isNew)
             newNote = true;
         else
@@ -446,14 +522,41 @@
             // Display error message to user
             modalTitle = "Error";
             modalBody = "An error occurred and the note was not saved.";
-            modalURL = string.Empty;
             await modal.OnShowModalClick();
         }
     }
 
     private async Task HandleNoteDeletion()
     {
-        
+        // Delete the selected Note
+        var result = await _notes.DeleteNote(selectedNote.NoteId);
+
+        // Hide the Note Modal
+        await notesModal.HideAsync();
+
+        if (result)
+        {   // Note Deletion Successful
+
+            //Remove the note from the table
+            Notes.Remove(selectedNote);
+
+            // Refresh the grid
+            if (grid is not null)
+                await grid.RefreshDataAsync();
+
+            // Display confimation message to user
+            modalTitle = "Deletion Confirmed";
+            modalBody = "The note has been deleted.";
+            await modal.OnShowModalClick();
+        }
+        else
+        {   // Note Deletion Failed
+
+            // Display error message to user
+            modalTitle = "Error";
+            modalBody = "An error occurred and the note was not deleted.";
+            await modal.OnShowModalClick();
+        }
     }
 
     #endregion

@@ -1,8 +1,9 @@
 ﻿/* 
 *    ITaskService.cs
-*    3/14/2026
+*    3/21/2026
 *    ======================================
 *    - Initial creation
+*    - Added Task Update and Deletion
 *    ======================================
 *    Interface for Task related Database calls
 *   
@@ -21,13 +22,19 @@ namespace DataLibrary.ServiceLayer.TaskService
         // Get all Tasks for a specific category and Funeral
         Task<List<NsTask>> GetTasksByCategory(Guid funeral, string category);
 
-        // Create a new Task or Update and existing Task
-        Task<NsTask?> SaveTask(NsTask task);
+        // Create a new Task 
+        Task<NsTask?> CreateTask(NsTask task);
+
+        // Save changes to an existing Task in the database
+        Task<NsTask?> UpdateTask(NsTask task);
+
+        // Delete a Task
+        Task<bool> DeleteTask(Guid taskId);
 
         // Helper method for reading nullable string columns
-        string? HanldeGetString(SqlDataReader reader, string columnName);
+        string? HanldeGetString(SqlDataReader reader, string? columnName = null, int colIdx = 0);
 
         // Helper method for reading nullable DateTime columns
-        DateTime? HanldeGetDateTime(SqlDataReader reader, string columnName);
+        DateTime? HanldeGetDateTime(SqlDataReader reader, string? columnName = null, int colIdx = 0);
     }
 }

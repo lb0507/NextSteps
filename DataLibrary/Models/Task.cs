@@ -10,5 +10,6 @@
         public DateTime CreationDate { get; set; } = DateTime.Now;
         public DateTime? CompletionDate { get; set; }
         public Guid FuneralId { get; set; }
+        public bool IsDeleted { get; set; } = false;
     }
 }

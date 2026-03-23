@@ -1,8 +1,9 @@
 ﻿/* 
 *    TaskService.cs
-*    3/14/2026
+*    3/21/2026
 *    ======================================
 *    - Initial creation
+*    - Added Task Update and Deletion
 *    ======================================
 *    Service Layer for Task related Database calls
 *   
@@ -45,14 +46,15 @@ namespace DataLibrary.ServiceLayer.FuneralService
                             {
                                 var task = new NsTask
                                 {
-                                    TaskId = reader.GetGuid(reader.GetOrdinal("TaskId")),
-                                    TaskNumber = reader.GetString(reader.GetOrdinal("TaskNumber")),
-                                    Description = HanldeGetString(reader, "Description"),
-                                    Category = reader.GetString(reader.GetOrdinal("Category")),
-                                    IsComplete = reader.GetBoolean(reader.GetOrdinal("IsComplete")),
-                                    CreationDate = reader.GetDateTime(reader.GetOrdinal("CreationDate")),
-                                    CompletionDate = HanldeGetDateTime(reader, "CompletionDate"),
-                                    FuneralId = reader.GetGuid(reader.GetOrdinal("FuneralId"))
+                                    TaskId = reader.GetGuid(0),
+                                    TaskNumber = reader.GetString(1),
+                                    Description = HanldeGetString(reader, colIdx:2),
+                                    Category = reader.GetString(3),
+                                    IsComplete = reader.GetBoolean(4),
+                                    CreationDate = reader.GetDateTime(5),
+                                    CompletionDate = HanldeGetDateTime(reader, colIdx: 6),
+                                    FuneralId = reader.GetGuid(7),
+                                    IsDeleted = reader.GetBoolean(8)
                                 };
                                 tasks.Add(task);
                             }
@@ -85,7 +87,7 @@ namespace DataLibrary.ServiceLayer.FuneralService
                 {
                     await conn.OpenAsync();
 
-                    using (SqlCommand cmd = new SqlCommand("SELECT * FROM Tasks WHERE FuneralId = @Funeral AND Category = @Category", conn))
+                    using (SqlCommand cmd = new SqlCommand("SELECT * FROM Tasks WHERE FuneralId = @Funeral AND Category = @Category AND IsDeleted = 0", conn))
                     {
                         cmd.Parameters.AddWithValue("@Funeral", funeral);
                         cmd.Parameters.AddWithValue("@Category", category);
@@ -124,7 +126,8 @@ namespace DataLibrary.ServiceLayer.FuneralService
         }
 
 
-        public async Task<NsTask?> SaveTask(NsTask task)
+        // Add a new Task to the database
+        public async Task<NsTask?> CreateTask(NsTask task)
         {
             try
             {
@@ -135,9 +138,9 @@ namespace DataLibrary.ServiceLayer.FuneralService
                     SqlCommand cmd = new SqlCommand();
 
                     if (task.CompletionDate is null)
-                        cmd = new SqlCommand("INSERT INTO Tasks (TaskId, TaskNumber, Description, Category, IsComplete, CreationDate, FuneralId) VALUES (@TaskId, @TaskNumber, @Description, @Category, @IsComplete, @CreationDate, @FuneralId)", conn);
+                        cmd = new SqlCommand("INSERT INTO Tasks (TaskId, TaskNumber, Description, Category, IsComplete, CreationDate, FuneralId, IsDeleted) VALUES (@TaskId, @TaskNumber, @Description, @Category, @IsComplete, @CreationDate, @FuneralId, 0)", conn);
                     else
-                        cmd = new SqlCommand("INSERT INTO Tasks (TaskId, TaskNumber, Description, Category, IsComplete, CreationDate, CompletionDate, FuneralId) VALUES (@TaskId, @TaskNumber, @Description, @Category, @IsComplete, @CreationDate, @CompletionDate, @FuneralId)", conn);
+                        cmd = new SqlCommand("INSERT INTO Tasks (TaskId, TaskNumber, Description, Category, IsComplete, CreationDate, CompletionDate, FuneralId, IsDeleted) VALUES (@TaskId, @TaskNumber, @Description, @Category, @IsComplete, @CreationDate, @CompletionDate, @FuneralId, 0)", conn);
 
                     cmd.Parameters.AddWithValue("@TaskId", task.TaskId);
                     cmd.Parameters.AddWithValue("@TaskNumber", task.TaskNumber);
@@ -169,19 +172,107 @@ namespace DataLibrary.ServiceLayer.FuneralService
             return null;
         }
 
-
-        // Generic Helper methods for null value handline
-        public string? HanldeGetString(SqlDataReader reader, string columnName)
+        // Save changes to an existing Task in the database
+        public async Task<NsTask?> UpdateTask(NsTask task)
         {
-            if (!reader.IsDBNull(reader.GetOrdinal(columnName)))
-                return reader.GetString(reader.GetOrdinal(columnName));
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(_config.GetConnectionString("AzureSql")))
+                {
+                    conn.Open();
+
+                    string cmdString = "UPDATE Tasks SET Description = @Description, IsComplete = @IsComplete";
+
+                    if (task.CompletionDate is not null)
+                        cmdString = cmdString + ", CompletionDate = @CompletionDate";
+
+                    cmdString = cmdString + " WHERE TaskId = @TaskId";
+
+                    SqlCommand cmd = new SqlCommand(cmdString, conn);
+
+                    cmd.Parameters.AddWithValue("@Description", task.Description);
+                    cmd.Parameters.AddWithValue("@IsComplete", task.IsComplete);
+                    if (task.CompletionDate is not null)
+                        cmd.Parameters.AddWithValue("@CompletionDate", task.CompletionDate);
+                    cmd.Parameters.AddWithValue("@TaskId", task.TaskId);
+
+                    int rowsInserted = cmd.ExecuteNonQuery();
+
+                    if (rowsInserted > 0)
+                        return task;
+                    else
+                        return null;
+                }
+            }
+            catch (SqlException ex)
+            {
+                Console.WriteLine("SQL Error: " + ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("An error occurred: " + ex.Message);
+            }
             return null;
         }
 
-        public DateTime? HanldeGetDateTime(SqlDataReader reader, string columnName)
+
+        // Delete a Task
+        public async Task<bool> DeleteTask(Guid taskId)
         {
-            if (!reader.IsDBNull(reader.GetOrdinal(columnName)))
-                return reader.GetDateTime(reader.GetOrdinal(columnName));
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(_config.GetConnectionString("AzureSql")))
+                {
+                    conn.Open();
+                    SqlCommand cmd = new SqlCommand(
+                        "UPDATE Tasks SET IsDeleted = 1 WHERE TaskId = @TaskId", conn);
+
+                    cmd.Parameters.AddWithValue("@TaskId", taskId);
+
+                    if (cmd.ExecuteNonQuery() > 0)
+                        return true;
+                    else
+                        return false;
+                }
+            }
+            catch (SqlException ex)
+            {
+                Console.WriteLine("SQL Error: " + ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("An error occurred: " + ex.Message);
+            }
+            return false;
+        }
+
+
+        // Generic Helper methods for null value handling
+        public string? HanldeGetString(SqlDataReader reader, string? columnName = null, int colIdx = 0)
+        {
+            int column = 0;
+
+            if (columnName != null)
+                column = reader.GetOrdinal(columnName);
+            else
+                column = colIdx;
+
+            if (!reader.IsDBNull(column))
+                return reader.GetString(column);
+            return null;
+        }
+
+        public DateTime? HanldeGetDateTime(SqlDataReader reader, string? columnName = null, int colIdx = 0)
+        {
+            int column = 0;
+
+            if (columnName != null)
+                column = reader.GetOrdinal(columnName);
+            else
+                column = colIdx;
+
+            if (!reader.IsDBNull(column))
+                return reader.GetDateTime(column);
             return null;
         }
 
