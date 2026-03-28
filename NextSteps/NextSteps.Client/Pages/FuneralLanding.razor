@@ -1,8 +1,9 @@
 ﻿@*
     Funeral Landing Page
-    3/14/2026
+    3/28/2026
     ======================================
     - Initial page creation
+    - Added Task Progress Bar
     ======================================
     Landing page navigated to after selecting a Funeral.
     Category selection page for a Funeral.
@@ -11,6 +12,7 @@
 @using BlazorBootstrap
 @using DataLibrary.Models;
 @using DataLibrary.ServiceLayer.FuneralService;
+@using DataLibrary.ServiceLayer.TaskService;
 @using DataLibrary.ServiceLayer.UserService;
 @using NextSteps.Client.Components
 @using NextSteps.Client.Shared
@@ -19,6 +21,7 @@
 @inject NavigationManager _nav
 @inject BrowserStorageService _storage
 @inject IFuneralService _funeral
+@inject ITaskService _tasks
 @inject IUserService _user
 
 <!-- Allows user to interact -->
@@ -36,12 +39,17 @@
 
     <Button Type="ButtonType.Link" To="/funeral-selection">Back to Funeral Selection</Button>
 
+    <!-- Progress Bar for Showing Percentage of Task Completion -->
+    <Progress Class="mb-3">
+        <ProgressBar Width="@(taskProgress)" Label="@($"{(int)taskProgress}%")" Type="ProgressType.StripedAndAnimated" />
+    </Progress>
+
     <!-- Category Selection Icon Grid -->
     <div class="table-container">
         <table class="icon-grid">
             <tr>
                 <td><Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/General Info">General Info</Button></td>
-                <td><Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/client-info">Category</Button></td>
+                <td><Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/Vendors">Vendors</Button></td>
                 <td><Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/client-info">Category</Button></td>
             </tr>
             <tr>
@@ -66,6 +74,8 @@
 
     private User currentUser = new();
 
+    double taskProgress = 0;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -79,7 +89,15 @@
             }
             else
             {
+                // Get the currently accessed funeral from browser storage
                 currentFuneral = await _storage.GetAsync<Funeral>("currentFuneral") ?? new();
+
+                // Get the count of completed tasks and all tasks for the funeral
+                var taskCounts = await _tasks.GetCountOfTasksByFuneral(currentFuneral.FuneralId);
+
+                // Calculate the percentage of tasks completed for this funeral
+                if (taskCounts.Item2 != 0)
+                    taskProgress = (((double)taskCounts.Item1) / ((double)taskCounts.Item2)) * 100;
             }
         }
         StateHasChanged();

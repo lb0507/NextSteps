@@ -22,6 +22,9 @@ namespace DataLibrary.ServiceLayer.TaskService
         // Get all Tasks for a specific category and Funeral
         Task<List<NsTask>> GetTasksByCategory(Guid funeral, string category);
 
+        // Get the number of completed tasks and the number of total tasks for a category
+        Task<(int, int)> GetCountOfTasksByFuneral(Guid funeral);
+
         // Create a new Task 
         Task<NsTask?> CreateTask(NsTask task);
 

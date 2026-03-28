@@ -12,5 +12,6 @@ namespace DataLibrary.Models
         public DateTime? DateOfService { get; set; }
         public int NumberOfTasks { get; set; } = 0;
         public Guid UserId { get; set; }
+        public bool IsDeleted { get; set; } = false;
     }
 }

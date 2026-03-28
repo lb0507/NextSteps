@@ -14,10 +14,6 @@ namespace DataLibrary.ServiceLayer.UserService
 {
     public interface IUserService
     {
-        User? current_user { get; }
-
-        void SetUser(User user);
-
         //Returns true if the email and password match a user in the database, false otherwise
         Task<User?> LoginUser(string email, string password);
 

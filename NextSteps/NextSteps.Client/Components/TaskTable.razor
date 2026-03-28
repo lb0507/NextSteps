@@ -1,8 +1,9 @@
 ﻿@*
     Task Table Component
-    3/15/2026
+    3/28/2026
     ======================================
-    - Initial page creation
+    - Initial component creation
+    - Added Task Progress Bar
     ======================================
 *@
 
@@ -13,6 +14,11 @@
 @inject NavigationManager _nav
 @inject BrowserStorageService _storage
 @inject ITaskService _task
+
+<!-- Progress Bar for Showing Percentage of Task Completion -->
+<Progress Class="mb-3">
+    <ProgressBar Width="@((completedTasks / allTasks)*100)" Label="@($"{(int)((completedTasks / allTasks)*100)}%")" Type="ProgressType.StripedAndAnimated" />
+</Progress>
 
 <div class="task-table-container">
 
@@ -58,7 +64,7 @@
 
     </div>
 
-    <Button Color="ButtonColor.Primary" Type="ButtonType.Link" To="/add-task/General Info">Add Task</Button>
+    <Button Color="ButtonColor.Primary" Type="ButtonType.Link" To=@($"/add-task/{Category}")>Add Task</Button>
 
 </div>
 
@@ -70,12 +76,9 @@
     [Parameter, EditorRequired]
     public string Category { get; set; }
 
-    // [Parameter, EditorRequired]
-    // public List<NsTask> Tasks { get; set; }
-
-    // [Parameter, EditorRequired]
-    // public BlazorBootstrap.Grid<NsTask>? Grid { get; set; }
-
+    private double completedTasks = 0;
+    private double allTasks = 1;
+    private int percent = 0;
 
     #region [GRID]
 
@@ -103,9 +106,17 @@
 
         // Fetch the tasks for this category and Funeral
         Tasks = await _task.GetTasksByCategory(FuneralId, Category);
-
+        Console.WriteLine($"{Category} {Tasks.Count()}");
         // Refresh the grid
         if (grid is not null)
             await grid.RefreshDataAsync();
+
+        if (Tasks.Count() != 0)
+        {
+            completedTasks = Tasks.Where(t => t.IsComplete == true).Count();
+            allTasks = Tasks.Count();
+        }
+
+        await InvokeAsync(StateHasChanged);
     }
 }

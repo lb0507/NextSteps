@@ -1,8 +1,9 @@
 ﻿@*
     General Info Page
-    3/14/2026
+    3/28/2026
     ======================================
     - Initial page creation
+    - Added saving functionality for funeral info and funeral deletion
     ======================================
     Category page for General Funeral Information
 *@
@@ -10,6 +11,7 @@
 @using BlazorBootstrap
 @using DataLibrary.Models;
 @using DataLibrary.ServiceLayer.TaskService;
+@using DataLibrary.ServiceLayer.FuneralService;
 @using NextSteps.Client.Components
 @using NextSteps.Client.Shared
 
@@ -17,6 +19,7 @@
 @inject NavigationManager _nav
 @inject BrowserStorageService _storage
 @inject ITaskService _task
+@inject IFuneralService _funeral
 
 <!-- Allows user to interact -->
 @rendermode InteractiveServer
@@ -25,6 +28,32 @@
 @layout CustomLayout
 
 @page "/General Info"
+
+<!-- Screen Message Modal -->
+<ScreenModal @ref="modal" TitleText="@modalTitle" BodyText="@modalBody" URL="@modalURL" />
+
+
+<!-- Modal for Confirming the Deletion of the Funeral -->
+<Modal @ref="confirmationModal" Title="Confirm Deletion?"
+       IsVerticallyCentered
+       Size="ModalSize.Regular">
+    <BodyTemplate>
+
+        <div class="modal-body">
+            <span>Please confirm that you would like to delete this funeral. This action cannot be undone.</span>
+        </div>
+
+    </BodyTemplate>
+    <FooterTemplate>
+
+        <Button Color="ButtonColor.Secondary" @onclick="confirmationModal.HideAsync">Cancel</Button>
+        
+        <Button Color="ButtonColor.Danger" @onclick="HandleDeletion">Delete</Button>
+
+    </FooterTemplate>
+</Modal>
+
+
 
 <div class="page-container">
 
@@ -47,10 +76,76 @@
             <Tab Title="Info">
                 <Content>
 
+                    <div class="info-tab">
+
+                        <table style="width: 98%;">
+
+                            <colgroup>
+                                <col span="1" style="width: 16%" />
+                            </colgroup>
+                            <colgroup>
+                                <col span="1" style="width: 84%" />
+                            </colgroup>
+
+                            <!-- NAME OF DECEASED -->
+                            <tr>
+                                <td style="display: flex; vertical-align: top;">
+                                    <label>Name of Deceased</label>
+                                </td>
+
+                                <td>
+                                    <!-- Input field for the Name of Deceased -->
+                                    <input type="text"
+                                           @bind=@(currentFuneral.DeceasedName) />
+                                </td>
+                            </tr>
+
+                            <!-- PLANNED DATE OF FUNERAL SERVICE -->
+                            <tr>
+                                <td>
+                                    <label>Date of Service</label>
+                                </td>
+
+                                <td>
+                                    <!-- Time Picker Input for the Date of Funeral Service -->
+                                    <input type="date"
+                                           @bind="@currentFuneral.DateOfService"
+                                           ShowSeconds="false" />
+                                </td>
+                            </tr>
+
+                            <!-- PLANNED LOCATION OF FUNERAL SERVICE -->
+                            <tr>
+                                <td>
+                                    <label>Location of Service</label>
+                                </td>
+
+                                <td>
+                                    <!-- Input field for Location of the Funeral Service -->
+                                    <input type="text"
+                                            @bind=@(currentFuneral.Location) />
+                                </td>
+                            </tr>
+
+                        </table>
+
+                        <div class="buttons">
+
+                            <Button Type="ButtonType.Link" Color="ButtonColor.Secondary" To="/funeral">Back</Button>
+
+                            <Button Color="ButtonColor.Danger" @onclick="HandleDeletionConfirmation">Delete this Funeral</Button>
+            
+                            <Button Color="ButtonColor.Primary" @onclick="HandleSave">Save Funeral Info</Button>
+
+                        </div>
+                    </div>
+
                 </Content>
+
             </Tab>
 
         </Tabs>
+
     </div> 
 
 </div>
@@ -60,6 +155,14 @@
     private Funeral currentFuneral = new();
 
     private User currentUser = new();
+
+    #region[MODAL]
+    private ScreenModal modal = default!;
+    private Modal confirmationModal = default!;
+    private string modalTitle = string.Empty;
+    private string modalBody = string.Empty;
+    private string modalURL = string.Empty;
+    #endregion
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -79,5 +182,64 @@
             }
         }
         StateHasChanged();
+    }
+
+    private async Task HandleSave()
+    {
+        // Display an error message to the user if they attempt to save the funeral info without entering a description
+        if (string.IsNullOrWhiteSpace(currentFuneral.DeceasedName))
+        {
+            modalTitle = "Error";
+            modalBody = "Name of Deceased cannot be empty. Please enter a name and try again.";
+            await modal.OnShowModalClick();
+            return;
+        }
+
+        var result = await _funeral.UpdateFuneral(currentFuneral);
+
+        if (result is not null)
+        {
+            // update the funeral in browser storage
+            await _storage.SetAsync("currentFuneral", result);
+
+            // Display success message to user and redirect them back to the category page
+            modalTitle = "Save Successful";
+            modalBody = "The funeral info has been saved successfully.";
+            await modal.OnShowModalClick();
+        }
+        else
+        {
+            // Display error message to user
+            modalTitle = "Error";
+            modalBody = "An error occurred and the funeral info was not updated.";
+            await modal.OnShowModalClick();
+        }
+    }
+
+    private async Task HandleDeletionConfirmation() => await confirmationModal.ShowAsync();
+
+    private async Task HandleDeletion()
+    {
+        await confirmationModal.HideAsync();
+
+        var result = await _funeral.DeleteFuneral(currentFuneral.FuneralId);
+
+        if (result)
+        {   // Funeral Deletion Successful
+
+            // Display confimation message to user
+            modalTitle = "Deletion Confirmed";
+            modalBody = "The funeral has been deleted.";
+            modalURL = $"/funeral-selection";
+            await modal.OnShowModalClick();
+        }
+        else
+        {   // Funeral Deletion Failed
+
+            // Display error message to user
+            modalTitle = "Error";
+            modalBody = "An error occurred and the funeral was not deleted.";
+            await modal.OnShowModalClick();
+        }
     }
 }

@@ -126,6 +126,47 @@ namespace DataLibrary.ServiceLayer.FuneralService
         }
 
 
+        // Get the number of completed tasks and the number of total tasks for a category
+        public async Task<(int, int)> GetCountOfTasksByFuneral(Guid funeral)
+        {
+            var taskCounts = (0, 0);
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(_config.GetConnectionString("AzureSql")))
+                {
+                    await conn.OpenAsync();
+
+                    using (SqlCommand cmd = new SqlCommand
+                            (
+                            "SELECT COUNT( CASE WHEN FuneralId = @FuneralId AND IsDeleted = 0 AND IsComplete = 1 THEN 1 END ) AS complete_tasks, COUNT( CASE WHEN FuneralId = @FuneralId AND IsDeleted = 0 THEN 1 END ) AS total_tasks FROM Tasks;", 
+                            conn))
+                    {
+                        cmd.Parameters.AddWithValue("@FuneralId", funeral);
+
+                        using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
+                        {
+                            while (await reader.ReadAsync())
+                            {
+                                taskCounts.Item1 = reader.GetInt32(0);
+                                taskCounts.Item2 = reader.GetInt32(1);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                Console.WriteLine("SQL Error: " + ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("An error occurred: " + ex.Message);
+            }
+
+            return taskCounts;
+        }
+
+
         // Add a new Task to the database
         public async Task<NsTask?> CreateTask(NsTask task)
         {
@@ -171,6 +212,7 @@ namespace DataLibrary.ServiceLayer.FuneralService
 
             return null;
         }
+
 
         // Save changes to an existing Task in the database
         public async Task<NsTask?> UpdateTask(NsTask task)

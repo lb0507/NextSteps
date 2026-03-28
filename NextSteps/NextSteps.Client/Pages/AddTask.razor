@@ -250,7 +250,7 @@
 
         <div class="task-buttons">
 
-            <Button Type="ButtonType.Link" Color="ButtonColor.Secondary" To="@($"/{category ?? task.Category}")">Back</Button>
+            <Button Type="ButtonType.Link" Color="ButtonColor.Secondary" To="@($"/{backURL}")">Back</Button>
 
             @if (taskId is not null)
             {
@@ -308,6 +308,8 @@
 
     [Parameter]
     public string? category { get; set; }
+
+    private string backURL = "";
 
     private NsTask task = new();
     private bool taskStatus = false;
@@ -371,6 +373,22 @@
                 if (grid is not null)
                     await grid.RefreshDataAsync();
             }
+            else
+            {
+                // Set the category of the task if the category was passed in through the url
+                task.Category = category ?? "Uncategorized";
+            }
+
+            // Set the url for the back button if the user came from the Vendors page
+            switch (task.Category)
+            {
+                case "Florist":
+                case "Photography":
+                case "Catering":
+                case "Music":
+                    backURL = $"Vendors-{task.Category}";
+                    break;
+            }
 
             StateHasChanged();
         }
@@ -379,7 +397,6 @@
     // Create or Update the Task
     private async Task HandleSave()
     {
-        Console.WriteLine($"task.IsComplete: {task.IsComplete}");
         // Display an error message to the user if they attempt to save a Task without entering a description
         if (string.IsNullOrWhiteSpace(task.Description))
         {
@@ -394,7 +411,6 @@
         if (taskId is null)
         {
             task.FuneralId = currentFuneral.FuneralId;
-            task.Category = category ?? "Uncategorized";
             task.TaskNumber = $"Task-{currentFuneral.NumberOfTasks + 1}";
 
             // Create the Task
@@ -418,7 +434,7 @@
             // Display success message to user and redirect them back to the category page
             modalTitle = "Save Successful";
             modalBody = "The task has been saved successfully.";
-            modalURL = $"/{result.Category}";
+            modalURL = $"/{backURL}";
             await modal.OnShowModalClick();
         }
         else
@@ -444,7 +460,7 @@
             // Display confimation message to user
             modalTitle = "Deletion Confirmed";
             modalBody = "The task has been deleted.";
-            modalURL = $"/{task.Category}";
+            modalURL = $"/{backURL}";
             await modal.OnShowModalClick();
         }
         else

@@ -1,9 +1,10 @@
 ﻿/* 
 *    IFuneralService.cs
-*    3/15/2026
+*    3/28/2026
 *    ======================================
 *    - Initial creation
 *    - Added CreateFuneral
+*    - Added Update and Delete
 *    ======================================
 *    Interface for Funeral related Database calls
 *   
@@ -24,6 +25,12 @@ namespace DataLibrary.ServiceLayer.FuneralService
 
         // Update Number of Tasks for a Funeral
         Task<Funeral?> UpdateTaskNumber(Funeral funeral);
+
+        // Update a Funeral
+        Task<Funeral?> UpdateFuneral(Funeral funeral);
+
+        // Delete a Funeral
+        Task<bool> DeleteFuneral(Guid funeralId);
 
         // Helper method for reading nullable string columns
         string? HanldeGetString(SqlDataReader reader, string columnName);
