@@ -1,15 +1,14 @@
 ﻿@*
-    Task Add/Modify Page
-    3/21/2026
+    Contact Add/Modify Page
+    3/28/2026
     ======================================
     - Initial page creation
-    - Added Note and Task deletion
     ======================================
 *@
 
 @using BlazorBootstrap
 @using DataLibrary.Models;
-@using DataLibrary.ServiceLayer.TaskService;
+@using DataLibrary.ServiceLayer.ContactService;
 @using DataLibrary.ServiceLayer.FuneralService;
 @using DataLibrary.ServiceLayer.NoteService;
 @using NextSteps.Client.Components
@@ -18,7 +17,7 @@
 <!-- Inject Services -->
 @inject NavigationManager _nav
 @inject BrowserStorageService _storage
-@inject ITaskService _task
+@inject IContactService _contact
 @inject IFuneralService _funeral
 @inject INoteService _notes
 
@@ -28,34 +27,34 @@
 <!-- Override MainLayout from Server and use Client's Custom Layout-->
 @layout CustomLayout
 
-@page "/add-task/{category}"
-@page "/task/{taskId:guid}"
+@page "/add-contact"
+@page "/contact/{contactId:guid}"
 
 <!-- Screen Message Modal -->
-<ScreenModal @ref="modal" TitleText="@modalTitle" BodyText="@modalBody" URL="@modalURL"/>
+<ScreenModal @ref="modal" TitleText="@modalTitle" BodyText="@modalBody" URL="@modalURL" />
 
 
-<!-- Modal for view Notes attached to the Task -->
-<Modal @ref="notesModal" Title="@(newNote? "New Note" : "Task Note")" 
-    IsVerticallyCentered
-    Size="ModalSize.Large"
-    Class="note-modal">
+<!-- Modal for view Notes attached to the Contact -->
+<Modal @ref="notesModal" Title="@(newNote ? "New Note" : "Contact Note")"
+       IsVerticallyCentered
+       Size="ModalSize.Large"
+       Class="note-modal">
     <BodyTemplate>
 
         @if (newNote)
         {
             <div class="modal-body">
                 <textarea class="notes-desc-input"
-                          @bind="newNoteText"
-                          rows="8"/>
+                @bind="newNoteText"
+                rows="8" />
             </div>
         }
         else
         {
             <div class="modal-body">
                 <textarea class="notes-desc-input"
-                          @bind="selectedNote.NoteText" 
-                          rows="8" />
+                @bind="selectedNote.NoteText"
+                rows="8" />
             </div>
 
             <div class="modal-body">
@@ -67,7 +66,7 @@
     </BodyTemplate>
     <FooterTemplate>
         <Button Color="ButtonColor.Secondary" @onclick="OnHideModalClick">Close</Button>
-        
+
         @if (newNote)
         {
             <Button Color="ButtonColor.Primary" @onclick="HandleAttachNote">Save</Button>
@@ -83,20 +82,19 @@
 
 <!-- Modal for Confirming the Deletion of the Task -->
 <Modal @ref="confirmationModal" Title="Confirm Deletion?"
-       IsVerticallyCentered
-       Size="ModalSize.Regular"
-       >
+IsVerticallyCentered
+Size="ModalSize.Regular">
     <BodyTemplate>
 
         <div class="modal-body">
-            <span>Please confirm that you would like to delete this task. This action cannot be undone.</span>
+            <span>Please confirm that you would like to delete this contact. This action cannot be undone.</span>
         </div>
 
     </BodyTemplate>
     <FooterTemplate>
 
         <Button Color="ButtonColor.Secondary" @onclick="confirmationModal.HideAsync">Cancel</Button>
-        
+
         <Button Color="ButtonColor.Danger" @onclick="HandleTaskDeletion">Delete</Button>
 
     </FooterTemplate>
@@ -104,177 +102,157 @@
 
 
 <div class="page-container" style="display: flex; width: 100%;  height: 85vh;">
-    
-    <div class="task-details" style=" width: 70%; border-right: 1px solid midnightblue; height: 100%">
 
-        @if (taskId is null)
+    <div class="contact-details" style=" width: 70%; border-right: 1px solid midnightblue; height: 100%">
+
+        @if (contactId is null)
         {
-            <h3>Add Task</h3>
+            <h3>Add Contact</h3>
         }
         else
         {
-            <h3>Task Details</h3>
+            <h3>Contact Details</h3>
         }
 
         <table style="width: 98%;">
 
             <colgroup>
-                <col span="1" style="width: 16%" />
+                <col span="1" style="width: 30%" />
             </colgroup>
             <colgroup>
-                <col span="1" style="width: 84%" />
+                <col span="1" style="width: 70%" />
             </colgroup>
 
-            <!-- TASK NUMBER -->
-            <tr>
-                <td>
-                    <label>Task Number</label>
-                </td>
 
-                <td>
-                    <!-- Display the Task Number -->
-                    @if (taskId is null)
-                    {
-                        <input type="text"
-                               readonly
-                               value="Provided by System" />
-                    }
-                    else
-                    {
-                        <input type="text"
-                               readonly
-                               @bind="task.TaskNumber" />
-                    }
-                </td>
-            </tr>
-
-            <!-- TASK DESCRIPTION -->
+            <!-- CONTACT NAME -->
             <tr>
                 <td style="display: flex; vertical-align: top;">
-                    <label>Task Description</label>
+                    <label>Contact Name</label>
                 </td>
 
                 <td>
-                    <!-- Input field for the Task Description -->
-                    <textarea type="text"
-                           @bind="task.Description"
-                           rows="12"
-                           style="width: 100%; resize: none"/>
+                    <!-- Input field for the Contact Name -->
+                    <input type="text"
+                    @bind="contact.ContactName" />
                 </td>
             </tr>
 
-            <!-- TASK CATEGORY -->
+            <!-- CONTACT TYPE -->
             <tr>
                 <td>
-                    <label>Task Category</label>
-                </td>
-
-                <td>
-                    @if (category is null)
-                    {
-                        <input type="text"
-                               readonly
-                               value="@task.Category" />
-                    }
-                    else
-                    {
-                        <input type="text"
-                               readonly
-                               value=@(category) />
-                    }
-                </td>
-            </tr>
-        
-            <!-- TASK STATUS -->
-            <tr>
-                <td>
-                    <label>Task Status</label>
+                    <label>Contact Type</label>
                 </td>
 
                 <td>
                     <!-- Selection menu for the Task Status -->
-                    <InputSelect style="height: 4vh; width: 15%" @bind-Value="@task.IsComplete">
-                        @* @if (taskStatus == true)
+                    <InputSelect style="height: 4vh; width: 15%" @bind-Value="@contact.ContactType">
+
+                        @if (contactId is null)
                         {
-                            <option value=@false>Incomplete</option>
-                            <option value=@true selected>Completed</option>
+                            <option disabled selected>Select a Contact Type...</option>
                         }
-                        else
-                        { *@
-                            <option value="false">Incomplete</option>
-                            <option value="true">Completed</option>
-                        @* } *@
-                        
+                        @foreach (var type in ContactTypes)
+                        {
+                            <option>@type</option>
+                        }
+
                     </InputSelect>
                 </td>
             </tr>
 
-            <!-- TASK CREATION DATE -->
+            @if (contact.ContactType == "Vendor")
+            {
+                <!-- VENDOR TYPE -->
+                <tr>
+                    <td>
+                        <label>Vendor Type</label>
+                    </td>
+
+                    <td>
+                        <!-- Selection menu for the Task Status -->
+                        <InputSelect style="height: 4vh; width: 15%" @bind-Value="@contact.VendorType">
+
+                            @if (contactId is null)
+                            {
+                                <option disabled selected>Select a Vendor Type...</option>
+                            }
+                            @foreach (var type in VendorTypes)
+                            {
+                                <option>@type</option>
+                            }
+
+                        </InputSelect>
+                    </td>
+                </tr>
+            }
+
+            <!-- CONTACT EMAIL -->
             <tr>
                 <td>
-                    <label>Creation Date</label>
+                    <label>Email Address</label>
                 </td>
 
                 <td>
-                    <!-- Display the Creation Date -->
-                    @if (taskId is null)
-                    {
-                        <input type="text"
-                               readonly
-                               value="Provided by System" />
-                    }
-                    else
-                    {
-                        <input type="text"
-                               readonly
-                               value=@(task.CreationDate.ToString("dd MMM yyyy HH:mm")) />
-                    }
+                    <input type="text"
+                    @bind="contact.ContactEmail" />
                 </td>
             </tr>
 
-            <!-- TASK COMPLETION DATE -->
+            <!-- CONTACT PHONE -->
             <tr>
                 <td>
-                    <label>Completion Date</label>
+                    <label>Phone Number</label>
                 </td>
 
                 <td>
-                    <!-- Time Picker Input for the Completion Date -->
-                    <input type="date"
-                           @bind="@task.CompletionDate"
-                           ShowSeconds="false" />
+                    <input type="text"
+                    @bind="contact.ContactPhone" />
+                </td>
+            </tr>
+
+            <!-- GLOBAL FLAG -->
+            <tr>
+                <td>
+                    <label>Make Contact Available Across All Funerals?</label>
+                </td>
+
+                <td class="radio-buttons">
+                    <InputRadioGroup @bind-Value="contact.IsGlobal" TValue="bool" >
+                        <div class="radio-option"> <InputRadio Value="true" /> Yes </div>
+                        <div class="radio-option"> <InputRadio Value="false" /> No </div>
+                    </InputRadioGroup>
                 </td>
             </tr>
 
         </table>
 
-        <div class="task-buttons">
+        <div class="contact-buttons">
 
-            <Button Type="ButtonType.Link" Color="ButtonColor.Secondary" To="@($"/{backURL}")">Back</Button>
+            <Button Type="ButtonType.Link" Color="ButtonColor.Secondary" To="/contactbook">Back</Button>
 
-            @if (taskId is not null)
+            @if (contactId is not null)
             {
-                <Button Color="ButtonColor.Danger" @onclick="HandleTaskDeletionConfirmation">Delete Task</Button>
+                <Button Color="ButtonColor.Danger" @onclick="HandleContactDeletionConfirmation">Delete Contact</Button>
             }
-            
-            <Button Color="ButtonColor.Primary" @onclick="HandleSave">Save Task</Button>
+
+            <Button Color="ButtonColor.Primary" @onclick="HandleSave">Save Contact</Button>
 
         </div>
     </div>
-    
+
     <div class="notes-section" style="width: 30%; padding-left: 20px; height: 100%;">
         <div class="notes-table" style="max-height: 95%; overflow: auto; background-color: lightgray">
 
             <!-- Table of Notes for this Task-->
             <Grid TItem="Note"
-                  @ref="grid"
-                  AllowSorting="true"
-                  AllowRowClick="true"
-                  OnRowDoubleClick="OnRowDoubleClick"
-                  Class="table table-hover table-bordered table-striped"
-                  DataProvider="TasksDataProvider"
-                  Responsive="true"
-                  RowKeySelector="(note) => note.NoteId">
+            @ref="grid"
+            AllowSorting="true"
+            AllowRowClick="true"
+            OnRowDoubleClick="OnRowDoubleClick"
+            Class="table table-hover table-bordered table-striped"
+            DataProvider="TasksDataProvider"
+            Responsive="true"
+            RowKeySelector="(note) => note.NoteId">
 
                 <GridColumns>
 
@@ -287,7 +265,7 @@
                     <GridColumn TItem="Note" HeaderText="Date" PropertyName="CreationDate" SortKeySelector="item => item.CreationDate" Class="date-col">
                         @(context.CreationDate.ToString("dd MMM yyyy HH:mm"))
                     </GridColumn>
-            
+
                 </GridColumns>
 
             </Grid>
@@ -304,18 +282,27 @@
 
 @code {
     [Parameter]
-    public Guid? taskId { get; set; }
+    public Guid? contactId { get; set; }
 
-    [Parameter]
-    public string? category { get; set; }
+    private Contact contact = new();
+    private string contactType = "Uncategorized";
+    private List<string> ContactTypes = new List<string>
+    {
+        "Family",
+        "Vendor",
+        "Medical",
+        "Legal"
+    };
 
-    private string backURL = "";
-
-    private NsTask task = new();
-    private bool taskStatus = false;
+    private List<string> VendorTypes = new List<string>
+    {
+        "Florist",
+        "Photography",
+        "Catering",
+        "Music"
+    };
 
     private User currentUser = new();
-
     private Funeral currentFuneral = new();
 
     #region[MODAL]
@@ -359,116 +346,113 @@
             currentFuneral = await _storage.GetAsync<Funeral>("currentFuneral") ?? new();
 
             // If a TaskId was passed in through the URL, use it to pull the Task object
-            if (taskId is not null)
+            if (contactId is not null)
             {
                 // Fetch the Task details
-                task = await _task.GetTask(taskId ?? Guid.Empty) ?? new();
+                contact = await _contact.GetContact(contactId ?? Guid.Empty) ?? new();
 
-                Console.WriteLine($"Setting task status to {task.IsComplete}");
-
-                // Fetch the notes attached to this task
-                Notes = await _notes.GetNotes(taskId ?? Guid.Empty);
+                // Fetch the notes attached to this contact
+                Notes = await _notes.GetNotes(contactId ?? Guid.Empty);
 
                 // Refresh the Notes grid
                 if (grid is not null)
                     await grid.RefreshDataAsync();
-            }
-            else
-            {
-                // Set the category of the task if the category was passed in through the url
-                task.Category = category ?? "Uncategorized";
-            }
-
-            // Set the url for the back button if the user came from the Vendors page
-            switch (task.Category)
-            {
-                case "Florist":
-                case "Photography":
-                case "Catering":
-                case "Music":
-                    backURL = $"Vendors-{task.Category}";
-                    break;
             }
 
             StateHasChanged();
         }
     }
 
-    // Create or Update the Task
+    // Create or Update the Contact
     private async Task HandleSave()
     {
-        // Display an error message to the user if they attempt to save a Task without entering a description
-        if (string.IsNullOrWhiteSpace(task.Description))
+        // Display an error message to the user if they attempt to save a Contact without entering a name
+        if (string.IsNullOrWhiteSpace(contact.ContactName))
         {
             modalTitle = "Error";
-            modalBody = "Task description cannot be empty. Please enter a description and try again.";
+            modalBody = "Contact name cannot be empty. Please enter a name and try again.";
+            await modal.OnShowModalClick();
+            return;
+        }
+        else if (string.IsNullOrWhiteSpace(contact.ContactType))
+        {
+            modalTitle = "Error";
+            modalBody = "Contact type cannot be empty. Please enter a type and try again.";
             await modal.OnShowModalClick();
             return;
         }
 
-        NsTask? result = null;
+        Contact? result = null;
 
-        if (taskId is null)
+        // If the contact type is not vendor, be sure to remove the vendor type
+        if (contact.ContactType != "Vendor")
+            contact.VendorType = null;
+
+        if (contactId is null)
         {
-            task.FuneralId = currentFuneral.FuneralId;
-            task.TaskNumber = $"Task-{currentFuneral.NumberOfTasks + 1}";
+            // If the user selected for the contact to be available across all funerals, add the current funeral id
+            if (!contact.IsGlobal)
+                contact.FuneralId = currentFuneral.FuneralId;
+            
+            // Set the user id
+            contact.UserId = currentUser.UserId;
 
-            // Create the Task
-            result = await _task.CreateTask(task);
+            // Create the Contact
+            result = await _contact.CreateContact(contact);
         }
         else
         {
-            // Update the Task
-            result = await _task.UpdateTask(task);
+            // Update the Contact
+            result = await _contact.UpdateContact(contact);
         }
 
         if (result is not null)
         {
-            // Update the number of tasks for the funeral if the task is new
-            if (taskId is null)
+            // Update the number of contacts for the funeral if the contact is new
+            if (contactId is null)
             {
                 currentFuneral = await _funeral.UpdateTaskNumber(currentFuneral) ?? new();
                 await _storage.SetAsync("currentFuneral", currentFuneral);
-            }            
+            }
 
             // Display success message to user and redirect them back to the category page
             modalTitle = "Save Successful";
-            modalBody = "The task has been saved successfully.";
-            modalURL = $"/{backURL}";
+            modalBody = "The contact has been saved successfully.";
+            modalURL = $"/contactbook";
             await modal.OnShowModalClick();
         }
         else
         {
             // Display error message to user
             modalTitle = "Error";
-            modalBody = "An error occurred and the task was not saved.";
+            modalBody = "An error occurred and the contact was not saved.";
             await modal.OnShowModalClick();
         }
     }
 
-    private async Task HandleTaskDeletionConfirmation() => await confirmationModal.ShowAsync();
+    private async Task HandleContactDeletionConfirmation() => await confirmationModal.ShowAsync();
 
     private async Task HandleTaskDeletion()
     {
         await confirmationModal.HideAsync();
 
-        var result = await _task.DeleteTask(taskId ?? Guid.Empty);
+        var result = await _contact.DeleteContact(contactId ?? Guid.Empty);
 
         if (result)
-        {   // Task Deletion Successful
+        {   // Contact Deletion Successful
 
             // Display confimation message to user
             modalTitle = "Deletion Confirmed";
-            modalBody = "The task has been deleted.";
-            modalURL = $"/{backURL}";
+            modalBody = "The contact has been deleted.";
+            modalURL = $"/contactbook";
             await modal.OnShowModalClick();
         }
         else
         {   // Task Deletion Failed
 
-            // Display error message to user
+            // Contact error message to user
             modalTitle = "Error";
-            modalBody = "An error occurred and the task was not deleted.";
+            modalBody = "An error occurred and the contact was not deleted.";
             await modal.OnShowModalClick();
         }
     }
@@ -516,7 +500,7 @@
             new Note
             {
                 NoteText = newNoteText,
-                ObjectId = task.TaskId
+                ObjectId = contact.ContactId
             }
         );
 
@@ -531,7 +515,6 @@
             // Refresh the grid
             if (grid is not null)
                 await grid.RefreshDataAsync();
-
         }
         else
         {
@@ -542,6 +525,7 @@
         }
     }
 
+    // Delete a Note
     private async Task HandleNoteDeletion()
     {
         // Delete the selected Note
@@ -576,4 +560,5 @@
     }
 
     #endregion
+
 }

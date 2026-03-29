@@ -1,0 +1,122 @@
+﻿@*
+    Contact Book Page
+    3/28/2026
+    ======================================
+    - Initial page creation
+    ======================================
+*@
+
+@using BlazorBootstrap
+@using DataLibrary.Models;
+@using DataLibrary.ServiceLayer.FuneralService;
+@using DataLibrary.ServiceLayer.UserService;
+@using DataLibrary.ServiceLayer.ContactService;
+@using NextSteps.Client.Components
+@using NextSteps.Client.Shared
+
+<!-- Inject Services -->
+@inject NavigationManager _nav
+@inject BrowserStorageService _storage
+@inject IFuneralService _funeral
+@inject IUserService _user
+@inject IContactService _contact
+
+<!-- Allows user to interact -->
+@rendermode InteractiveServer
+
+<!-- Override MainLayout from Server and use Client's Custom Layout-->
+@layout CustomLayout
+
+@page "/contactbook"
+
+
+<div class="page-container">
+
+    <!-- Page Headers -->
+    <h1>Contact Book</h1>
+
+    <!-- Back button to return to category selection/funeral landing page -->
+    <Button Type="ButtonType.Link" To="/funeral">Back to Category Selection</Button>
+
+    <!-- Table of Contact objects -->
+    <Grid TItem="Contact"
+          @ref="grid"
+          AllowFiltering="true"
+          AllowPaging="true"
+          AllowSorting="true"
+          AllowDetailView="true"
+          AllowRowClick="true"
+          OnRowDoubleClick="OnRowDoubleClick"
+          Class="table table-hover table-bordered table-striped"
+          DataProvider="ContactsDataProvider"
+          PageSize="10"
+          Responsive="true">
+
+        <GridColumns>
+            <!-- Contact Name Column -->
+            <GridColumn TItem="Contact" HeaderText="Name" PropertyName="ContactName" SortKeySelector="item => item.ContactName">
+                @context.ContactName
+            </GridColumn>
+
+            <!-- Contact Type Column -->
+            <GridColumn TItem="Contact" HeaderText="Type" PropertyName="ContactType" SortKeySelector="item => item.ContactType">
+                @context.ContactType
+            </GridColumn>
+
+            <!-- Location Column -->
+            <GridColumn TItem="Contact" HeaderText="Location" PropertyName="Location" SortKeySelector="item => item.Location">
+                @context.Location
+            </GridColumn>    
+            
+        </GridColumns>
+
+    </Grid>
+
+    <Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/add-contact">Add Contact</Button>
+
+</div>
+
+@code {
+
+    private List<Contact> Contacts = new();
+
+    private User currentUser = new();
+    private Funeral currentFuneral = new();
+
+    #region [GRID]
+
+    private BlazorBootstrap.Grid<Contact>? grid;
+
+    // Populate the table with the contacts
+    private async Task<GridDataProviderResult<Contact>> ContactsDataProvider(GridDataProviderRequest<Contact> request) => await Task.FromResult(request.ApplyTo(Contacts));
+
+    // Upon clicking a row, navigate the user to the corresponding contact's detail page
+    private async Task OnRowDoubleClick(GridRowEventArgs<Contact> args) => _nav.NavigateTo($"/contact/{args.Item.ContactId}");
+
+    #endregion
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            currentUser = await _storage.GetAsync<User>("currentUser") ?? new();
+            currentFuneral = await _storage.GetAsync<Funeral>("currentFuneral") ?? new();
+
+            // Check if the user is signed in. If not, navigate them to the Sign In page
+            if (currentUser is null)
+            {
+                _nav.NavigateTo("/");
+            }
+            else
+            {
+                // Get all of the user's contacts that are either global or associated with this funeral
+                Contacts = await _contact.GetContacts(currentUser?.UserId ?? Guid.Empty, currentFuneral.FuneralId);
+
+                // Refresh the grid
+                if(grid is not null)
+                    await grid.RefreshDataAsync();
+            }
+        }
+
+    }
+}

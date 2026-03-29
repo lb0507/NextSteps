@@ -1,0 +1,5 @@
+﻿.radio-buttons{
+    display: flex;
+    vertical-align: middle;
+    gap: 60px;
+}

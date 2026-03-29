@@ -106,7 +106,7 @@
 
         // Fetch the tasks for this category and Funeral
         Tasks = await _task.GetTasksByCategory(FuneralId, Category);
-        Console.WriteLine($"{Category} {Tasks.Count()}");
+
         // Refresh the grid
         if (grid is not null)
             await grid.RefreshDataAsync();

@@ -1,3 +1,4 @@
+using DataLibrary.ServiceLayer.ContactService;
 using DataLibrary.ServiceLayer.FuneralService;
 using DataLibrary.ServiceLayer.NoteService;
 using DataLibrary.ServiceLayer.TaskService;
@@ -30,6 +31,7 @@ namespace NextSteps
             builder.Services.AddScoped<IFuneralService, FuneralService>();// add Funeral API services
             builder.Services.AddScoped<ITaskService, TaskService>();// add Task API services
             builder.Services.AddScoped<INoteService, NoteService>();// add Note API services
+            builder.Services.AddScoped<IContactService, ContactService>();// add Contact API services
 
             var app = builder.Build();
 
