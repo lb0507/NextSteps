@@ -1,8 +1,9 @@
 ﻿@*
     Contact Add/Modify Page
-    3/28/2026
+    4/4/2026
     ======================================
     - Initial page creation
+    - Added input field for Location
     ======================================
 *@
 
@@ -126,14 +127,15 @@ Size="ModalSize.Regular">
 
             <!-- CONTACT NAME -->
             <tr>
-                <td style="display: flex; vertical-align: top;">
+                <td>
                     <label>Contact Name</label>
                 </td>
 
                 <td>
                     <!-- Input field for the Contact Name -->
                     <input type="text"
-                    @bind="contact.ContactName" />
+                    @bind="contact.ContactName"
+                           style="width:50%" />
                 </td>
             </tr>
 
@@ -145,7 +147,7 @@ Size="ModalSize.Regular">
 
                 <td>
                     <!-- Selection menu for the Task Status -->
-                    <InputSelect style="height: 4vh; width: 15%" @bind-Value="@contact.ContactType">
+                    <InputSelect style="height: 4vh; width: 50%" @bind-Value="@contact.ContactType">
 
                         @if (contactId is null)
                         {
@@ -170,7 +172,7 @@ Size="ModalSize.Regular">
 
                     <td>
                         <!-- Selection menu for the Task Status -->
-                        <InputSelect style="height: 4vh; width: 15%" @bind-Value="@contact.VendorType">
+                        <InputSelect style="height: 4vh; width: 50%" @bind-Value="@contact.VendorType">
 
                             @if (contactId is null)
                             {
@@ -194,7 +196,8 @@ Size="ModalSize.Regular">
 
                 <td>
                     <input type="text"
-                    @bind="contact.ContactEmail" />
+                           @bind="contact.ContactEmail"
+                           style="width:50%" />
                 </td>
             </tr>
 
@@ -206,7 +209,21 @@ Size="ModalSize.Regular">
 
                 <td>
                     <input type="text"
-                    @bind="contact.ContactPhone" />
+                           @bind="contact.ContactPhone"
+                           style="width:50%" />
+                </td>
+            </tr>
+
+            <!-- CONTACT LOCATION -->
+            <tr>
+                <td>
+                    <label>Location</label>
+                </td>
+
+                <td>
+                    <input type="text"
+                           @bind="contact.Location"
+                           style="width:50%" />
                 </td>
             </tr>
 
@@ -286,6 +303,8 @@ Size="ModalSize.Regular">
 
     private Contact contact = new();
     private string contactType = "Uncategorized";
+
+    // List of types of contact to be selected from
     private List<string> ContactTypes = new List<string>
     {
         "Family",
@@ -294,6 +313,7 @@ Size="ModalSize.Regular">
         "Legal"
     };
 
+    // List of types for is the contact type is Vendor
     private List<string> VendorTypes = new List<string>
     {
         "Florist",

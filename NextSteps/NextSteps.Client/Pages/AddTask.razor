@@ -194,16 +194,9 @@
                 <td>
                     <!-- Selection menu for the Task Status -->
                     <InputSelect style="height: 4vh; width: 15%" @bind-Value="@task.IsComplete">
-                        @* @if (taskStatus == true)
-                        {
-                            <option value=@false>Incomplete</option>
-                            <option value=@true selected>Completed</option>
-                        }
-                        else
-                        { *@
-                            <option value="false">Incomplete</option>
-                            <option value="true">Completed</option>
-                        @* } *@
+
+                        <option value="false">Incomplete</option>
+                        <option value="true">Completed</option>
                         
                     </InputSelect>
                 </td>
@@ -364,8 +357,6 @@
                 // Fetch the Task details
                 task = await _task.GetTask(taskId ?? Guid.Empty) ?? new();
 
-                Console.WriteLine($"Setting task status to {task.IsComplete}");
-
                 // Fetch the notes attached to this task
                 Notes = await _notes.GetNotes(taskId ?? Guid.Empty);
 
@@ -379,7 +370,7 @@
                 task.Category = category ?? "Uncategorized";
             }
 
-            // Set the url for the back button if the user came from the Vendors page
+            // Set the url for the back button
             switch (task.Category)
             {
                 case "Florist":
@@ -387,6 +378,9 @@
                 case "Catering":
                 case "Music":
                     backURL = $"Vendors-{task.Category}";
+                    break;
+                default:
+                    backURL = task.Category;
                     break;
             }
 
