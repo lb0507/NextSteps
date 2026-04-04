@@ -1,9 +1,10 @@
 ﻿/* 
 *    FuneralService.cs
-*    3/15/2026
+*    3/28/2026
 *    ======================================
 *    - Initial creation
 *    - Added CreateFuneral
+*    - Added Update and Delete
 *    ======================================
 *    Service Layer for Funeral related Database calls
 *   
@@ -18,9 +19,6 @@ namespace DataLibrary.ServiceLayer.FuneralService
 {
     public class FuneralService : IFuneralService
     {
-        // Store the current selected Funeral data
-        public Funeral? current_funeral { get; private set; }
-
         private readonly IConfiguration _config;
 
         public FuneralService(IConfiguration config)
@@ -38,7 +36,7 @@ namespace DataLibrary.ServiceLayer.FuneralService
                 {
                     await conn.OpenAsync();
 
-                    using (SqlCommand cmd = new SqlCommand("SELECT * FROM Funerals WHERE UserId = @UserId", conn))
+                    using (SqlCommand cmd = new SqlCommand("SELECT * FROM Funerals WHERE UserId = @UserId AND IsDeleted = 0", conn))
                     {
                         cmd.Parameters.AddWithValue("@UserId", userId);
 
@@ -53,7 +51,8 @@ namespace DataLibrary.ServiceLayer.FuneralService
                                     Location = HanldeGetString(reader, "Location"),
                                     DateOfService = HanldeGetDateTime(reader, "DateOfService"),
                                     NumberOfTasks = reader.GetInt32(reader.GetOrdinal("NumberOfTasks")),
-                                    UserId = reader.GetGuid(reader.GetOrdinal("UserId"))
+                                    UserId = reader.GetGuid(reader.GetOrdinal("UserId")),
+                                    IsDeleted = reader.GetBoolean(reader.GetOrdinal("IsDeleted"))
                                 };
                                 funerals.Add(funeral);
                             }
@@ -84,7 +83,7 @@ namespace DataLibrary.ServiceLayer.FuneralService
                 {
                     conn.Open();
                     SqlCommand cmd = new SqlCommand(
-                        "INSERT INTO Funerals (FuneralId, DeceasedName, UserId, NumberOfTasks) VALUES (@FuneralId, @DeceasedName, @UserId, 0)", conn);
+                        "INSERT INTO Funerals (FuneralId, DeceasedName, UserId, NumberOfTasks, IsDeleted) VALUES (@FuneralId, @DeceasedName, @UserId, 0, 0)", conn);
 
                     cmd.Parameters.AddWithValue("@FuneralId", funeral.FuneralId);
                     cmd.Parameters.AddWithValue("@DeceasedName", funeral.DeceasedName);
@@ -149,43 +148,86 @@ namespace DataLibrary.ServiceLayer.FuneralService
         }
 
 
-        // Update a Funeral -- WIP
-        //public async Task<Funeral?> UpdateFuneral(Funeral funeral)
-        //{
-        //    try
-        //    {
-        //        using (SqlConnection conn = new SqlConnection(_config.GetConnectionString("AzureSql")))
-        //        {
-        //            conn.Open();
-        //            SqlCommand cmd = new SqlCommand(
-        //                "UPDATE Funerals SET NumberOfTasks = @numberOfTasks WHERE FuneralId = @funeralId", conn);
+        // Update a Funeral
+        public async Task<Funeral?> UpdateFuneral(Funeral funeral)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(_config.GetConnectionString("AzureSql")))
+                {
+                    conn.Open();
 
-        //            cmd.Parameters.AddWithValue("@funeralId", funeral.FuneralId);
-        //            cmd.Parameters.AddWithValue("@numberOfTasks", funeral.NumberOfTasks);
+                    string cmdString = "UPDATE Funerals SET DeceasedName = @DeceasedName";
 
-        //            int rowsInserted = cmd.ExecuteNonQuery();
+                    if (funeral.DateOfService is not null)
+                        cmdString = cmdString + ", DateOfService = @DateOfService";
 
-        //            if (rowsInserted > 0)
-        //                return funeral;
-        //            else
-        //                return null;
-        //        }
-        //    }
-        //    catch (SqlException ex)
-        //    {
-        //        Console.WriteLine("SQL Error: " + ex.Message);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine("An error occurred: " + ex.Message);
-        //    }
+                    if (funeral.Location is not null)
+                        cmdString = cmdString + ", Location = @Location";
 
-        //    return null;
-        //}
+                    cmdString = cmdString + " WHERE FuneralId = @FuneralId";
+
+                    SqlCommand cmd = new SqlCommand(cmdString, conn);
+
+                    // Add parameters to the query
+                    cmd.Parameters.AddWithValue("@DeceasedName", funeral.DeceasedName);
+                    if (funeral.DateOfService is not null)
+                        cmd.Parameters.AddWithValue("@DateOfService", funeral.DateOfService);
+                    if (funeral.Location is not null)
+                        cmd.Parameters.AddWithValue("@Location", funeral.Location);
+                    cmd.Parameters.AddWithValue("@FuneralId", funeral.FuneralId);
+
+                    int rowsInserted = cmd.ExecuteNonQuery();
+
+                    if (rowsInserted > 0)
+                        return funeral;
+                    else
+                        return null;
+                }
+            }
+            catch (SqlException ex)
+            {
+                Console.WriteLine("SQL Error: " + ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("An error occurred: " + ex.Message);
+            }
+
+            return null;
+        }
 
 
-        // Return the current selected Funeral
-        public Funeral? GetFuneralInfo() => current_funeral;
+        // Delete a Funeral
+        public async Task<bool> DeleteFuneral(Guid funeralId)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(_config.GetConnectionString("AzureSql")))
+                {
+                    conn.Open();
+                    SqlCommand cmd = new SqlCommand(
+                        "UPDATE Funerals SET IsDeleted = 1 WHERE FuneralId = @FuneralId", conn);
+
+                    cmd.Parameters.AddWithValue("@FuneralId", funeralId);
+
+                    if (cmd.ExecuteNonQuery() > 0)
+                        return true;
+                    else
+                        return false;
+                }
+            }
+            catch (SqlException ex)
+            {
+                Console.WriteLine("SQL Error: " + ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("An error occurred: " + ex.Message);
+            }
+            return false;
+        }
+
 
         // Generic Helper methods for null value handline
         public string? HanldeGetString(SqlDataReader reader, string columnName)

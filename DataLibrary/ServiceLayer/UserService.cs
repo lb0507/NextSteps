@@ -19,9 +19,6 @@ namespace DataLibrary.ServiceLayer.UserService
 {
     public class UserService : IUserService
     {
-        // Store the current user's data
-        public User? current_user { get; private set; }
-
         private readonly IConfiguration _config;
 
         public UserService(IConfiguration config)
@@ -29,10 +26,6 @@ namespace DataLibrary.ServiceLayer.UserService
             _config = config;
         }
 
-        public void SetUser(User user)
-        {
-            current_user = user;
-        }
 
         // Validates input credentials and sets the current User
         public async Task<User?> LoginUser(string email, string password)
@@ -120,10 +113,7 @@ namespace DataLibrary.ServiceLayer.UserService
                     int rowsInserted = cmd.ExecuteNonQuery();
 
                     if (rowsInserted > 0)
-                    {
-                        current_user = user; // Set the newly registered user as the current user
-                        return user;
-                    }   
+                        return user;  
                     else
                         return null;
                 }
@@ -172,11 +162,5 @@ namespace DataLibrary.ServiceLayer.UserService
             }
             return false;
         }
-
-        // Return the current user
-        public User? GetUserSignOnInfo() => current_user;
-
-        // Sign out the user
-        public void SignOutUser() => current_user = new(); 
     }
 }

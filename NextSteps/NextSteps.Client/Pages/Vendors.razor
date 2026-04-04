@@ -1,0 +1,144 @@
+﻿@*
+    Vendors Page
+    3/28/2026
+    ======================================
+    - Initial page creation
+    ======================================
+    Category page for External Vendor Tasks
+*@
+
+@using BlazorBootstrap
+@using DataLibrary.Models;
+@using DataLibrary.ServiceLayer.TaskService;
+@using DataLibrary.ServiceLayer.FuneralService;
+@using NextSteps.Client.Components
+@using NextSteps.Client.Shared
+
+<!-- Inject Services -->
+@inject NavigationManager _nav
+@inject BrowserStorageService _storage
+@inject ITaskService _task
+@inject IFuneralService _funeral
+
+<!-- Allows user to interact -->
+@rendermode InteractiveServer
+
+<!-- Override MainLayout from Server and use Client's Custom Layout-->
+@layout CustomLayout
+
+@page "/Vendors"
+@page "/Vendors-{Category}"
+
+<!-- Screen Message Modal -->
+<ScreenModal @ref="modal" TitleText="@modalTitle" BodyText="@modalBody" URL="@modalURL" />
+
+<div class="page-container">
+
+    <h3>Vendors</h3>
+
+    <Button Type="ButtonType.Link" To="/funeral">Back to Category Selection</Button>
+
+    <div class="tabs-container">
+        <Tabs @ref="tabs">
+            <Tab Title="Floralist">
+                <Content>
+
+                    <TaskTable 
+                        FuneralId="@currentFuneral.FuneralId"
+                        Category="Florist"/>
+                    
+                </Content>
+            </Tab>
+            <Tab Title="Photography">
+                <Content>
+
+                    <TaskTable FuneralId="@currentFuneral.FuneralId"
+                               Category="Photography" />
+                    
+                </Content>
+            </Tab>
+            <Tab Title="Catering">
+                <Content>
+
+                    <TaskTable 
+                        FuneralId="@currentFuneral.FuneralId"
+                        Category="Catering"/>
+                    
+                </Content>
+            </Tab>
+            <Tab Title="Music">
+                <Content>
+
+                    <TaskTable 
+                        FuneralId="@currentFuneral.FuneralId"
+                        Category="Music"/>
+                    
+                </Content>
+            </Tab>
+        </Tabs>
+
+    </div> 
+
+</div>
+
+@code {
+
+    [Parameter]
+    public string? Category { get; set; }
+
+    Tabs tabs = default!;
+
+    private Funeral currentFuneral = new();
+
+    private User currentUser = new();
+
+    #region[MODAL]
+    private ScreenModal modal = default!;
+    private string modalTitle = string.Empty;
+    private string modalBody = string.Empty;
+    private string modalURL = string.Empty;
+    #endregion
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            currentUser = await _storage.GetAsync<User>("currentUser") ?? new();
+
+            // Check if the user is signed in. If not, navigate them to the Sign In page
+            if (currentUser is null)
+            {
+                _nav.NavigateTo("/");
+            }
+            else
+            {
+                // Get the selected Funeral from browser storage
+                currentFuneral = await _storage.GetAsync<Funeral>("currentFuneral") ?? new();
+            }
+
+            if (Category is not null)
+            {
+                switch (Category)
+                {
+                    case "Florist":
+                        await tabs.ShowTabByIndexAsync(0);
+                        break;
+                    case "Photography":
+                        await tabs.ShowTabByIndexAsync(1);
+                        break;
+                    case "Catering":
+                        await tabs.ShowTabByIndexAsync(2);
+                        break;
+                    case "Music":
+                        await tabs.ShowTabByIndexAsync(3);
+                        break;
+                    default:
+                        await tabs.ShowTabByIndexAsync(0);
+                        break;
+                }
+
+            }
+        }
+        StateHasChanged();
+    }
+}
