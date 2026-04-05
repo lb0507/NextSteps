@@ -103,19 +103,6 @@
                 </td>
             </tr>
 
-            @* <!-- STATE -->
-            <tr>
-                <td>
-                    <label></label>
-                </td>
-
-                <td>
-                    <input type="text"
-                           @bind="contact.ContactPhone"
-                           style="width:50%" />
-                </td>
-            </tr> *@
-
             <!-- RADIUS -->
             <tr>
                 <td>
@@ -144,20 +131,6 @@
                 </td>
             </tr>
 
-            @* <!-- GLOBAL FLAG -->
-            <tr>
-                <td>
-                    <label>Make Contact Available Across All Funerals?</label>
-                </td>
-
-                <td class="radio-buttons">
-                    <InputRadioGroup @bind-Value="contact.IsGlobal" TValue="bool">
-                        <div class="radio-option"> <InputRadio Value="true" /> Yes </div>
-                        <div class="radio-option"> <InputRadio Value="false" /> No </div>
-                    </InputRadioGroup>
-                </td>
-            </tr> *@
-
         </table>
 
         <div class="buttons">
@@ -174,8 +147,8 @@
         </div>
     </div>
 
-    <div class="results-section" style="width: 100%; padding-left: 20px; height: 100%;">
-        <div class="results-table" style="max-height: 95%; overflow: auto; background-color: lightgray">
+    <div class="results-section" style="width: 100%; padding-left: 20px">
+        <div class="results-table" style="margin-top: 10px; max-height: 58vh; overflow: auto; background-color: lightgray">
 
             <!-- Table to display the results from the search-->
             <Grid TItem="Contact"
@@ -183,6 +156,8 @@
                   AllowSorting="true"
                   Class="table table-hover table-bordered table-striped"
                   DataProvider="ContactsDataProvider"
+                  AllowPaging="true"
+                  PageSize="10"
                   Responsive="true"
                   AllowSelection="true"
                   SelectedItems="selectedContacts"
@@ -198,7 +173,7 @@
                     </GridColumn>
 
                     <!-- Phone Number Column -->
-                    <GridColumn TItem="Contact" HeaderText="Phone Number" PropertyName="ContactPhone" SortKeySelector="item => item.ContactPhone" Class="phone-col">
+                    <GridColumn TItem="Contact" HeaderText="Phone Number" PropertyName="ContactPhone" SortKeySelector="item => item.ContactPhone" Class="phone-col text-center">
                         @context.ContactPhone
                     </GridColumn>
 
@@ -208,7 +183,7 @@
                     </GridColumn>
 
                     <!-- Visibility Column -->
-                    <GridColumn TItem="Contact" HeaderText="Global?" PropertyName="IsGlobal" SortKeySelector="item => item.IsGlobal" Class="global-col">
+                    <GridColumn TItem="Contact" HeaderText="Global?" PropertyName="IsGlobal" SortKeySelector="item => item.IsGlobal" Class="global-col text-center">
                         @(context.IsGlobal ? "Yes" : "No")
                     </GridColumn>
 

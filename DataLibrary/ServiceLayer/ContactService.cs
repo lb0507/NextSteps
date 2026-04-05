@@ -1,8 +1,9 @@
 ﻿/* 
 *    ContactService.cs
-*    3/28/2026
+*    4/4/2026
 *    ======================================
 *    - Initial creation
+*    - Added Update Contact
 *    ======================================
 *    Service Layer for Contact related Database calls
 *   
@@ -237,37 +238,33 @@ namespace DataLibrary.ServiceLayer.ContactService
         {
             try
             {
-                //using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
-                //{
-                //    conn.Open();
+                using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
+                {
 
-                //    string cmdString = "UPDATE Funerals SET DeceasedName = @DeceasedName";
+                    conn.Open();
+                    SqlCommand cmd = new SqlCommand(
+                        "UPDATE Contacts SET ContactName = @ContactName, ContactType = @ContactType, ContactEmail = @ContactEmail, ContactPhone = @ContactPhone, " +
+                        "Location = @Location, VendorType = @VendorType, IsGlobal = @IsGlobal, FuneralId = @FuneralId WHERE ContactId = @ContactId", conn);
 
-                //    if (funeral.DateOfService is not null)
-                //        cmdString = cmdString + ", DateOfService = @DateOfService";
+                    cmd.Parameters.AddWithValue("@ContactName", contact.ContactName);
+                    cmd.Parameters.AddWithValue("@ContactType", contact.ContactType);
+                    cmd.Parameters.AddWithValue("@ContactEmail", string.IsNullOrEmpty(contact.ContactEmail) ? DBNull.Value : contact.ContactEmail);
+                    cmd.Parameters.AddWithValue("@ContactPhone", string.IsNullOrEmpty(contact.ContactPhone) ? DBNull.Value : contact.ContactPhone);
+                    cmd.Parameters.AddWithValue("@Location", string.IsNullOrEmpty(contact.Location) ? DBNull.Value : contact.Location);
+                    cmd.Parameters.AddWithValue("@VendorType", string.IsNullOrEmpty(contact.VendorType) ? DBNull.Value : contact.VendorType);
+                    cmd.Parameters.AddWithValue("@IsGlobal", contact.IsGlobal);
+                    cmd.Parameters.AddWithValue("@FuneralId", (contact.FuneralId is null) ? DBNull.Value : contact.FuneralId);
+                    cmd.Parameters.AddWithValue("@ContactId", contact.ContactId);
 
-                //    if (funeral.Location is not null)
-                //        cmdString = cmdString + ", Location = @Location";
+                    int rowsInserted = cmd.ExecuteNonQuery();
 
-                //    cmdString = cmdString + " WHERE FuneralId = @FuneralId";
-
-                //    SqlCommand cmd = new SqlCommand(cmdString, conn);
-
-                //    // Add parameters to the query
-                //    cmd.Parameters.AddWithValue("@DeceasedName", funeral.DeceasedName);
-                //    if (funeral.DateOfService is not null)
-                //        cmd.Parameters.AddWithValue("@DateOfService", funeral.DateOfService);
-                //    if (funeral.Location is not null)
-                //        cmd.Parameters.AddWithValue("@Location", funeral.Location);
-                //    cmd.Parameters.AddWithValue("@FuneralId", funeral.FuneralId);
-
-                //    int rowsInserted = cmd.ExecuteNonQuery();
-
-                //    if (rowsInserted > 0)
-                //        return funeral;
-                //    else
-                //        return null;
-                //}
+                    if (rowsInserted > 0)
+                    {
+                        return contact;
+                    }
+                    else
+                        return null;
+                }
             }
             catch (SqlException ex)
             {
