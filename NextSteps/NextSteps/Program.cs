@@ -1,8 +1,10 @@
+using Azure.Identity;
 using DataLibrary.ServiceLayer.ContactService;
 using DataLibrary.ServiceLayer.FuneralService;
 using DataLibrary.ServiceLayer.NoteService;
 using DataLibrary.ServiceLayer.TaskService;
 using DataLibrary.ServiceLayer.UserService;
+using DataLibrary.ServiceLayer.MapService;
 using NextSteps.Client;
 using NextSteps.Components;
 
@@ -14,11 +16,13 @@ namespace NextSteps
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            builder.Configuration
-            .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+            // Add the key vault
+            builder.Configuration.AddAzureKeyVault(
+                new Uri(builder.Configuration["KeyVault:VaultUri"]),
+                new DefaultAzureCredential()
+            );
 
-            // Add services to the container.
+            // Add services to the container
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents()
                 .AddInteractiveWebAssemblyComponents();
@@ -32,6 +36,7 @@ namespace NextSteps
             builder.Services.AddScoped<ITaskService, TaskService>();// add Task API services
             builder.Services.AddScoped<INoteService, NoteService>();// add Note API services
             builder.Services.AddScoped<IContactService, ContactService>();// add Contact API services
+            builder.Services.AddScoped<IMapService, MapService>();// add Map API services
 
             var app = builder.Build();
 
@@ -43,7 +48,6 @@ namespace NextSteps
             else
             {
                 app.UseExceptionHandler("/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
 

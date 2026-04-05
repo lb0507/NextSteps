@@ -6,7 +6,7 @@ namespace DataLibrary.Models
 {
     public class Contact
     {
-        public Guid ContactId { get; set; }
+        public Guid ContactId { get; set; } = Guid.NewGuid();
         public string ContactName { get; set; } = string.Empty;
         public string ContactType { get; set; } = "Uncategorized";
         public string? ContactEmail { get; set; }

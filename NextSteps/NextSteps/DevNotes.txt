@@ -3,3 +3,5 @@
 - Allow toggling of task status via directly clicking the Status column of a row
 OR
 - Allow updating Status of multiple tasks at a time via selection or row columns
+
+Add "Other" as an option for Contact Type and also maybe Vendor Type

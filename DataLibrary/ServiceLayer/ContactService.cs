@@ -32,7 +32,7 @@ namespace DataLibrary.ServiceLayer.ContactService
             var contacts = new List<Contact>();
             try
             {
-                using (SqlConnection conn = new SqlConnection(_config.GetConnectionString("AzureSql")))
+                using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
                     await conn.OpenAsync();
 
@@ -86,7 +86,7 @@ namespace DataLibrary.ServiceLayer.ContactService
             var contacts = new List<Contact>();
             try
             {
-                using (SqlConnection conn = new SqlConnection(_config.GetConnectionString("AzureSql")))
+                using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
                     await conn.OpenAsync();
 
@@ -138,7 +138,7 @@ namespace DataLibrary.ServiceLayer.ContactService
             var contacts = new List<Contact>();
             try
             {
-                using (SqlConnection conn = new SqlConnection(_config.GetConnectionString("AzureSql")))
+                using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
                     await conn.OpenAsync();
 
@@ -187,10 +187,9 @@ namespace DataLibrary.ServiceLayer.ContactService
         // Create a new Contact object
         public async Task<Contact?> CreateContact(Contact contact)
         {
-            contact.ContactId = Guid.NewGuid(); // Generate a new unique ID for the funeral
             try
             {
-                using (SqlConnection conn = new SqlConnection(_config.GetConnectionString("AzureSql")))
+                using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
                     
                     conn.Open();
@@ -238,7 +237,7 @@ namespace DataLibrary.ServiceLayer.ContactService
         {
             try
             {
-                //using (SqlConnection conn = new SqlConnection(_config.GetConnectionString("AzureSql")))
+                //using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 //{
                 //    conn.Open();
 
@@ -288,7 +287,7 @@ namespace DataLibrary.ServiceLayer.ContactService
         {
             try
             {
-                using (SqlConnection conn = new SqlConnection(_config.GetConnectionString("AzureSql")))
+                using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
                     conn.Open();
                     SqlCommand cmd = new SqlCommand(

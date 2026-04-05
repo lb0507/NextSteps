@@ -32,7 +32,7 @@ namespace DataLibrary.ServiceLayer.UserService
         {
             try
             {
-                using (SqlConnection conn = new SqlConnection(_config.GetConnectionString("AzureSql")))
+                using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
                     await conn.OpenAsync();
 
@@ -98,7 +98,7 @@ namespace DataLibrary.ServiceLayer.UserService
 
             try
             {
-                using (SqlConnection conn = new SqlConnection(_config.GetConnectionString("AzureSql")))
+                using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
                     conn.Open();
                     SqlCommand cmd = new SqlCommand(
@@ -135,7 +135,7 @@ namespace DataLibrary.ServiceLayer.UserService
         {
             try
             {
-                using (SqlConnection conn = new SqlConnection(_config.GetConnectionString("AzureSql")))
+                using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
                     conn.Open();
                     SqlCommand cmd = new SqlCommand("SELECT COUNT(*) FROM Users WHERE Email = @Email", conn);

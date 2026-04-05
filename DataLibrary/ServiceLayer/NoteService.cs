@@ -32,7 +32,7 @@ namespace DataLibrary.ServiceLayer.NoteService
             var notes = new List<Note>();
             try
             {
-                using (SqlConnection conn = new SqlConnection(_config.GetConnectionString("AzureSql")))
+                using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
                     await conn.OpenAsync();
 
@@ -77,7 +77,7 @@ namespace DataLibrary.ServiceLayer.NoteService
         {
             try
             {
-                using (SqlConnection conn = new SqlConnection(_config.GetConnectionString("AzureSql")))
+                using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
                     conn.Open();
                     SqlCommand cmd = new SqlCommand(
@@ -116,7 +116,7 @@ namespace DataLibrary.ServiceLayer.NoteService
         {
             try
             {
-                using (SqlConnection conn = new SqlConnection(_config.GetConnectionString("AzureSql")))
+                using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
                     conn.Open();
                     SqlCommand cmd = new SqlCommand(

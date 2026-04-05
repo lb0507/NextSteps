@@ -1,0 +1,42 @@
+﻿::deep .bb-table {
+    table-layout: fixed;
+}
+
+    ::deep .bb-table th:nth-child(1),
+    ::deep .bb-table th:nth-child(2),
+    ::deep .bb-table th:nth-child(3), 
+    ::deep .bb-table th:nth-child(4) {
+        background-color: dimgray;
+        color: white;
+    }
+
+    ::deep .bb-table .name-col {
+        width: 60%;
+    }
+
+    ::deep .bb-table .phone-col {
+        width: 10%;
+    }
+
+    ::deep .bb-table .location-col {
+        width: 25%;
+    }
+
+    ::deep .bb-table .global-col {
+        width: 5%;
+    }
+
+
+input, select {
+    height: 4vh;
+    width: 22%;
+}
+
+td {
+    height: 5vh;
+}
+
+.modal-body {
+    width: 100%;
+    padding: 10px;
+}

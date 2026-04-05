@@ -10,12 +10,11 @@
 */
 
 using DataLibrary.Models;
-using DataLibrary.ServiceLayer.TaskService;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 
-namespace DataLibrary.ServiceLayer.FuneralService
+namespace DataLibrary.ServiceLayer.TaskService
 {
     public class TaskService : ITaskService
     {
@@ -32,7 +31,7 @@ namespace DataLibrary.ServiceLayer.FuneralService
             var tasks = new List<NsTask>();
             try
             {
-                using (SqlConnection conn = new SqlConnection(_config.GetConnectionString("AzureSql")))
+                using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
                     await conn.OpenAsync();
 
@@ -83,7 +82,7 @@ namespace DataLibrary.ServiceLayer.FuneralService
             var tasks = new List<NsTask>();
             try
             {
-                using (SqlConnection conn = new SqlConnection(_config.GetConnectionString("AzureSql")))
+                using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
                     await conn.OpenAsync();
 
@@ -132,7 +131,7 @@ namespace DataLibrary.ServiceLayer.FuneralService
             var taskCounts = (0, 0);
             try
             {
-                using (SqlConnection conn = new SqlConnection(_config.GetConnectionString("AzureSql")))
+                using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
                     await conn.OpenAsync();
 
@@ -172,7 +171,7 @@ namespace DataLibrary.ServiceLayer.FuneralService
         {
             try
             {
-                using (SqlConnection conn = new SqlConnection(_config.GetConnectionString("AzureSql")))
+                using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
                     conn.Open();
 
@@ -219,7 +218,7 @@ namespace DataLibrary.ServiceLayer.FuneralService
         {
             try
             {
-                using (SqlConnection conn = new SqlConnection(_config.GetConnectionString("AzureSql")))
+                using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
                     conn.Open();
 
@@ -263,7 +262,7 @@ namespace DataLibrary.ServiceLayer.FuneralService
         {
             try
             {
-                using (SqlConnection conn = new SqlConnection(_config.GetConnectionString("AzureSql")))
+                using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
                     conn.Open();
                     SqlCommand cmd = new SqlCommand(

@@ -1,9 +1,10 @@
 ﻿@*
     Task Table Component
-    3/28/2026
+    4/4/2026
     ======================================
     - Initial component creation
     - Added Task Progress Bar
+    - Added Preloading Spinner and delay to ensure the data is loaded before the grid is refreshed
     ======================================
 *@
 
@@ -14,6 +15,9 @@
 @inject NavigationManager _nav
 @inject BrowserStorageService _storage
 @inject ITaskService _task
+
+<!-- Preload Spinner -->
+<Preload LoadingText=""/>
 
 <!-- Progress Bar for Showing Percentage of Task Completion -->
 <Progress Class="mb-3">
@@ -70,6 +74,9 @@
 
 @code {
 
+    [Inject]
+    protected PreloadService PreloadService { get; set; } = default!; 
+
     [Parameter, EditorRequired]
     public Guid FuneralId { get; set; }
 
@@ -102,10 +109,15 @@
 
     protected override async Task OnParametersSetAsync()
     {
+        PreloadService.Show(SpinnerColor.Dark);
+
         await base.OnParametersSetAsync();
 
         // Fetch the tasks for this category and Funeral
         Tasks = await _task.GetTasksByCategory(FuneralId, Category);
+
+        // A short pause to ensure the task data loads before the grid is refreshed
+        await Task.Delay(300);
 
         // Refresh the grid
         if (grid is not null)
@@ -116,6 +128,8 @@
             completedTasks = Tasks.Where(t => t.IsComplete == true).Count();
             allTasks = Tasks.Count();
         }
+
+        PreloadService.Hide();
 
         await InvokeAsync(StateHasChanged);
     }

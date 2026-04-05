@@ -121,17 +121,17 @@
                 </td>
                 
                    <td>
-                    <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" Class="mb-4" Style="width:18rem;">
+                    <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" Class="mb-4" Style="width:18rem;" @onclick="@(() => _nav.NavigateTo("/"))">
                         <CardBody>
                             <Icon Name="IconName.Box" Size="IconSize.x1" Color="IconColor.Light" />
                             <br>
-                            <Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/client-info">Category</Button>
+                            <Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/map-search">Category</Button>
                         </CardBody>
                     </Card>
                 </td>
 
                 <td>
-                    <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" Class="mb-4" Style="width:18rem;">
+                    <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" Class="mb-4" Style="width:18rem;" @onclick="@(() => _nav.NavigateTo("/"))">
                         <CardBody>
                             <Icon Name="IconName.Box" Size="IconSize.x1" Color="IconColor.Light" />
                             <br>

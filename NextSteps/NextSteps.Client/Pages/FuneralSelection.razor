@@ -29,6 +29,9 @@
 
 @page "/funeral-selection"
 
+<!-- Preload Spinner -->
+<Preload LoadingText="" />
+
 <!-- Modal for Adding new Funerals -->
 <Modal @ref="modal" Title="Add New Funeral Service">
     <BodyTemplate>
@@ -96,6 +99,8 @@
 </div>
 
 @code {
+    [Inject]
+    protected PreloadService PreloadService { get; set; } = default!;
 
     private List<Funeral> Funerals = new();
 
@@ -132,6 +137,8 @@
     {
         if (firstRender)
         {
+            PreloadService.Show(SpinnerColor.Dark);
+
             currentUser = await _storage.GetAsync<User>("currentUser") ?? new();
 
             // Check if the user is signed in. If not, navigate them to the Sign In page
@@ -146,10 +153,14 @@
 
                 Funerals = await _funeral.GetFunerals(currentUser?.UserId ?? Guid.Empty);
 
+                // A short pause to ensure the funeral data loads before the grid is refreshed
+                await Task.Delay(300);
+
                 // Refresh the grid
                 if(grid is not null)
                     await grid.RefreshDataAsync();
 
+                PreloadService.Hide();
             }
         }
 

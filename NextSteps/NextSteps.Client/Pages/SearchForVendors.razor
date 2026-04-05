@@ -1,0 +1,426 @@
+﻿@*
+    Search for Vendors Page
+    4/4/2026
+    ======================================
+    - Initial page creation
+    ======================================
+*@
+
+@using BlazorBootstrap
+@using DataLibrary.Models;
+@using DataLibrary.ServiceLayer.ContactService;
+@using DataLibrary.ServiceLayer.FuneralService;
+@using DataLibrary.ServiceLayer.NoteService;
+@using DataLibrary.ServiceLayer.MapService;
+@using NextSteps.Client.Components
+@using NextSteps.Client.Shared
+
+<!-- Inject Services -->
+@inject NavigationManager _nav
+@inject BrowserStorageService _storage
+@inject IContactService _contact
+@inject IFuneralService _funeral
+@inject INoteService _notes
+@inject IMapService _maps
+
+<!-- Allows user to interact -->
+@rendermode InteractiveServer
+
+<!-- Override MainLayout from Server and use Client's Custom Layout-->
+@layout CustomLayout
+
+@page "/add-vendors-search"
+
+<!-- Preload Spinner -->
+<Preload LoadingText="" />
+
+<!-- Screen Message Modal -->
+<ScreenModal @ref="modal" TitleText="@modalTitle" BodyText="@modalBody" URL="@modalURL" />
+
+<div class="page-container">
+
+    <div class="search-criteria">
+
+        <h3>Add Vendors by Search</h3>
+        
+        <table style="width: 98%;">
+
+            <colgroup>
+                <col span="1" style="width: 30%" />
+            </colgroup>
+            <colgroup>
+                <col span="1" style="width: 70%" />
+            </colgroup>
+
+            <!-- CONTACT TYPE -->
+            <tr>
+                <td>
+                    <label>Vendor Type</label>
+                </td>
+
+                <td>
+                    <!-- Selection menu for the Task Status -->
+                    <InputSelect style="height: 4vh; width: 50%" @bind-Value="@vendorType">
+
+                        <option disabled selected>Select a Vendor Type...</option>
+                        @foreach (var type in VendorTypes)
+                        {
+                            <option>@type</option>
+                        }
+
+                    </InputSelect>
+                </td>
+            </tr>
+
+            @if (vendorType == "Other")
+            {
+                <!-- OTHER VENDOR TYPE -->
+                <tr>
+                    <td>
+                       <!-- Empty Cell -->
+                    </td>
+
+                    <td>
+                        <!-- Input field for the Custom Vendor Type -->
+                        <input type="text"
+                               @bind="customVendorType"
+                               placeholder="Enter Vendor Type Here..."
+                               style="width:50%" />
+                    </td>
+                </tr>
+            }
+
+            <!-- AREA -->
+            <tr>
+                <td>
+                    <label>Area to Search</label>
+                </td>
+
+                <td>
+                    <input type="text"
+                           @bind="location"
+                           style="width:50%" />
+                </td>
+            </tr>
+
+            @* <!-- STATE -->
+            <tr>
+                <td>
+                    <label></label>
+                </td>
+
+                <td>
+                    <input type="text"
+                           @bind="contact.ContactPhone"
+                           style="width:50%" />
+                </td>
+            </tr> *@
+
+            <!-- RADIUS -->
+            <tr>
+                <td>
+                    <label>Radius of Area in Miles</label>
+                </td>
+
+                <td>
+                    <input type="number"
+                           @bind="radius"
+                           style="width:50%" />
+                </td>
+            </tr>
+
+            <!-- RESULT LIMIT -->
+            <tr>
+                <td>
+                    <label>Max Number of Results</label>
+                </td>
+
+                <td>
+                    <input type="number"
+                           @bind="numLimit"
+                           max="100"
+                           min="1"
+                           style="width:50%" />
+                </td>
+            </tr>
+
+            @* <!-- GLOBAL FLAG -->
+            <tr>
+                <td>
+                    <label>Make Contact Available Across All Funerals?</label>
+                </td>
+
+                <td class="radio-buttons">
+                    <InputRadioGroup @bind-Value="contact.IsGlobal" TValue="bool">
+                        <div class="radio-option"> <InputRadio Value="true" /> Yes </div>
+                        <div class="radio-option"> <InputRadio Value="false" /> No </div>
+                    </InputRadioGroup>
+                </td>
+            </tr> *@
+
+        </table>
+
+        <div class="buttons">
+
+            <Button Type="ButtonType.Link" Color="ButtonColor.Secondary" To="/contactbook">Back</Button>
+
+            <Button Color="ButtonColor.Primary" @onclick="HandleSearch">Search</Button>
+
+            @if (Contacts.Count() != 0)
+            {
+                <Button Color="ButtonColor.Primary" @onclick="HandleAdd">Save Selected</Button>
+            }
+
+        </div>
+    </div>
+
+    <div class="results-section" style="width: 100%; padding-left: 20px; height: 100%;">
+        <div class="results-table" style="max-height: 95%; overflow: auto; background-color: lightgray">
+
+            <!-- Table to display the results from the search-->
+            <Grid TItem="Contact"
+                  @ref="grid"
+                  AllowSorting="true"
+                  Class="table table-hover table-bordered table-striped"
+                  DataProvider="ContactsDataProvider"
+                  Responsive="true"
+                  AllowSelection="true"
+                  SelectedItems="selectedContacts"
+                  SelectionMode="GridSelectionMode.Multiple"
+                  SelectedItemsChanged="OnSelectedItemsChanged"
+                  RowKeySelector="(contact) => contact.ContactId">
+
+                <GridColumns>
+
+                    <!-- Business Name Column -->
+                    <GridColumn TItem="Contact" HeaderText="Name of Business" PropertyName="ContactName" SortKeySelector="item => item.ContactName" Class="name-col">
+                        @context.ContactName
+                    </GridColumn>
+
+                    <!-- Phone Number Column -->
+                    <GridColumn TItem="Contact" HeaderText="Phone Number" PropertyName="ContactPhone" SortKeySelector="item => item.ContactPhone" Class="phone-col">
+                        @context.ContactPhone
+                    </GridColumn>
+
+                    <!-- Location Column -->
+                    <GridColumn TItem="Contact" HeaderText="Location" PropertyName="Location" SortKeySelector="item => item.Location" Class="location-col">
+                        @context.Location
+                    </GridColumn>
+
+                    <!-- Visibility Column -->
+                    <GridColumn TItem="Contact" HeaderText="Global?" PropertyName="IsGlobal" SortKeySelector="item => item.IsGlobal" Class="global-col">
+                        @(context.IsGlobal ? "Yes" : "No")
+                    </GridColumn>
+
+                </GridColumns>
+
+            </Grid>
+
+        </div>
+
+    </div>
+
+</div>
+
+@code {
+    [Inject]
+    protected PreloadService PreloadService { get; set; } = default!;
+
+    [Parameter]
+    public Guid? contactId { get; set; }
+
+    private string vendorType = string.Empty;
+    private string customVendorType = string.Empty;
+    private string location = string.Empty;
+    private double radius;
+    private int numLimit = 50;
+
+    // List of types for is the contact type is Vendor
+    private List<string> VendorTypes = new List<string>
+    {
+        "Florist",
+        "Photography",
+        "Catering",
+        "Music",
+        "Other"
+    };
+
+    private User currentUser = new();
+    private Funeral currentFuneral = new();
+
+    #region[MODAL]
+    private ScreenModal modal = default!;
+    private Modal confirmationModal = default!;
+    private string modalTitle = string.Empty;
+    private string modalBody = string.Empty;
+    private string modalURL = string.Empty;
+    #endregion
+
+    #region [GRID]
+
+    private BlazorBootstrap.Grid<Contact>? grid;
+
+    private List<Contact> Contacts = new();
+    private HashSet<Contact> selectedContacts = new();
+
+    private async Task<GridDataProviderResult<Contact>> ContactsDataProvider(GridDataProviderRequest<Contact> request) => await Task.FromResult(request.ApplyTo(Contacts));
+
+    private Task OnSelectedItemsChanged(HashSet<Contact> contacts)
+    {
+        selectedContacts = contacts is not null && contacts.Any() ? contacts : new();
+        return Task.CompletedTask;
+    }
+
+    #endregion
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            currentUser = await _storage.GetAsync<User>("currentUser") ?? new();
+
+            // Check if the user is signed in. If not, navigate them to the Sign In page
+            if (currentUser is null)
+                _nav.NavigateTo("/");
+
+            currentFuneral = await _storage.GetAsync<Funeral>("currentFuneral") ?? new();
+
+
+
+            StateHasChanged();
+        }
+    }
+
+    // Search for businesses with the input criteria
+    private async Task HandleSearch()
+    {
+        // Display an error message to the user if they attempt to save a Contact without entering a name
+        if (string.IsNullOrWhiteSpace(vendorType) || (vendorType == "Other" && string.IsNullOrWhiteSpace(customVendorType)))
+        {
+            modalTitle = "Error";
+            modalBody = "Vendor type cannot be empty. Please enter a vendor type and try again.";
+            await modal.OnShowModalClick();
+            return;
+        }
+        else if (string.IsNullOrWhiteSpace(location))
+        {
+            modalTitle = "Error";
+            modalBody = "Location cannot be empty. Please enter a location and try again.";
+            await modal.OnShowModalClick();
+            return;
+        }
+        else if (radius == 0)
+        {
+            modalTitle = "Error";
+            modalBody = "Radius cannot be 0. Please enter a radius and try again.";
+            await modal.OnShowModalClick();
+            return;
+        }
+
+        PreloadService.Show(SpinnerColor.Dark);
+
+        // Clear the results table
+        Contacts.Clear();
+
+        string category = vendorType;
+
+        if (vendorType == "Other")
+            category = customVendorType;
+
+        var results = await _maps.SearchForService(category, location, radius, numLimit);
+
+        if (results is not null)
+        {
+            // Iteration through the search results and create contact objects for each to add to the results table
+            foreach (var result in results)
+            {
+                Contacts.Add
+                (
+                    new Contact
+                    {
+                        ContactName = result["Name"],
+                        ContactType = "Vendor",
+                        VendorType = vendorType,
+                        ContactPhone = result["Phone"],
+                        Location = result["Location"],
+                        IsGlobal = false,
+                        UserId = currentUser.UserId
+                    }
+                );
+            }
+
+            // Refresh the Results grid
+            if (grid is not null)
+                await grid.RefreshDataAsync();
+
+            PreloadService.Hide();
+        }
+        else
+        {
+            // Display error message to user
+            modalTitle = "Error";
+            modalBody = "An error occurred and the search failed.";
+            await modal.OnShowModalClick();
+        }
+    }
+
+    // Handle the creation of selected resutls
+    private async Task HandleAdd()
+    {
+        if (selectedContacts.Count() == 0)
+        {
+            // Display error message to user
+            modalTitle = "Error";
+            modalBody = "No vendors have been selected. Please select one or more vendors to add them as contacts.";
+            await modal.OnShowModalClick();
+        }
+        else
+        {
+            PreloadService.Show(SpinnerColor.Dark);
+
+            int numOfSuccess = 0; // Count the number of successfully saved contacts
+            List<string> NamesOfFailed = new(); // Store a list of the names of the contacts that failed to save
+
+            foreach (var contact in selectedContacts)
+            {
+                // If the contact is to be local, add the current funeral Id
+                if (!contact.IsGlobal)
+                    contact.FuneralId = currentFuneral.FuneralId;
+
+                // Create the contact
+                var result = await _contact.CreateContact(contact);
+
+                if (result is null)
+                    NamesOfFailed.Add(contact.ContactName); // Add the name of the contact that failed to save to the failure list
+                else
+                    numOfSuccess++; // Increment the number of successful saves
+            }
+
+            // Display message to user
+            modalTitle = "Import Complete";
+            modalBody = $"{numOfSuccess} contacts have been added to your contact book.";
+
+            // If any contacts failed to save, build the modal message to notify the user which ones failed
+            if (NamesOfFailed.Count() != 0)
+            {
+                string stringList = "";
+                int count = 0;
+                foreach (var name in NamesOfFailed)
+                {
+                    if (count == 0)
+                        stringList = name;
+                    else
+                        stringList = $"{stringList}, {name}";
+                    count++;
+                }
+
+                modalBody = $"{modalBody} The following contacts encountered an error and were not saved: {stringList}";
+            }
+            else
+                modalURL = "/contactbook"; // If all contacts saved successfully, navigate user back to contact book page
+
+            PreloadService.Hide();
+            await modal.OnShowModalClick();
+        }
+    }
+}
