@@ -1,9 +1,10 @@
 ﻿@*
     Contact Book Page
-    4/4/2026
+    4/5/2026
     ======================================
     - Initial page creation
     - Added button to navigate to Search for Vendors page
+    - Added filters
     ======================================
 *@
 
@@ -30,6 +31,8 @@
 
 @page "/contactbook"
 
+<!-- Preload Spinner -->
+<Preload LoadingText="" />
 
 <div class="page-container">
 
@@ -38,6 +41,47 @@
 
     <!-- Back button to return to category selection/funeral landing page -->
     <Button Type="ButtonType.Link" To="/funeral">Back to Category Selection</Button>
+
+    <div class="filter-row">
+
+        <!-- CONTACT TYPE -->
+        <div class="contact-filter">
+            <label>Contact Type</label>
+
+            <!-- Selection menu for the Contact Types -->
+            <select @onchange="HandleContactTypeSelection">
+                <option selected>All Contact Types</option>
+
+                @foreach (var type in ContactTypes)
+                {
+                    <option>@type</option>
+                }
+            </select>
+        </div>
+
+        @if (selectedContactType == "Vendor")
+        {
+            <!-- VENDOR TYPE -->
+            <div class="vendor-filter">
+
+                <label>Vendor Type</label>
+           
+                <!-- Selection menu for the Vendor Types -->
+                <select @onchange="HandleVendorTypeSelection">
+                    <option selected>All Vendors</option>
+
+                    @foreach (var type in VendorTypes)
+                    {
+                        <option>@type</option>
+                    }
+                </select>
+
+            </div>
+        
+        }
+
+    </div>
+    
 
     <!-- Table of Contact objects -->
     <Grid TItem="Contact"
@@ -80,18 +124,47 @@
 </div>
 
 @code {
+    [Inject]
+    protected PreloadService PreloadService { get; set; } = default!;
 
     private List<Contact> Contacts = new();
 
     private User currentUser = new();
     private Funeral currentFuneral = new();
 
+    #region [FILTER]
+
+    private string selectedContactType = "All Contact Types";
+    private string selectedVendorType = "All Vendors";
+
+    // List of types of contact to be filter on
+    private List<string> ContactTypes = new List<string>
+    {
+        "Family",
+        "Vendor",
+        "Medical",
+        "Legal",
+        "Other"
+    };
+
+    // List of types to filter on if the contact type is Vendor
+    private List<string> VendorTypes = new List<string>
+    {
+        "Florist",
+        "Photography",
+        "Catering",
+        "Music",
+        "Other"
+    };
+
+    #endregion
+
     #region [GRID]
 
     private BlazorBootstrap.Grid<Contact>? grid;
 
     // Populate the table with the contacts
-    private async Task<GridDataProviderResult<Contact>> ContactsDataProvider(GridDataProviderRequest<Contact> request) => await Task.FromResult(request.ApplyTo(Contacts));
+    private async Task<GridDataProviderResult<Contact>> ContactsDataProvider(GridDataProviderRequest<Contact> request) => await Task.FromResult(request.ApplyTo(ApplyFilters()));
 
     // Upon clicking a row, navigate the user to the corresponding contact's detail page
     private async Task OnRowDoubleClick(GridRowEventArgs<Contact> args) => _nav.NavigateTo($"/contact/{args.Item.ContactId}");
@@ -102,6 +175,8 @@
     {
         if (firstRender)
         {
+            PreloadService.Show(SpinnerColor.Dark);
+
             currentUser = await _storage.GetAsync<User>("currentUser") ?? new();
             currentFuneral = await _storage.GetAsync<Funeral>("currentFuneral") ?? new();
 
@@ -115,11 +190,53 @@
                 // Get all of the user's contacts that are either global or associated with this funeral
                 Contacts = await _contact.GetContacts(currentUser?.UserId ?? Guid.Empty, currentFuneral.FuneralId);
 
+                // A short pause to ensure the contact data loads before the grid is refreshed
+                await Task.Delay(300);
+
                 // Refresh the grid
                 if(grid is not null)
                     await grid.RefreshDataAsync();
             }
+            PreloadService.Hide();
         }
-
     }
+
+    #region[FILTER METHODS]
+
+    // Apply the selected filters and return the data to the grid
+    private List<Contact> ApplyFilters()
+    {
+        return Contacts.Where(contact =>
+            (selectedContactType == "All Contact Types" || contact.ContactType == selectedContactType) && // Filter out by selected contact type
+            (selectedContactType != "Vendor" || (selectedVendorType == "All Vendors" || contact.VendorType == selectedVendorType)) // If selected contact type is Vendor, filter out by selected vendor type
+        ).ToList();
+    }
+
+    // Event handler for when the user changes the contact type filter
+    private async void HandleContactTypeSelection(ChangeEventArgs e)
+    {
+        // Set the contact type filter with the selected value
+        selectedContactType = e.Value?.ToString() ?? "All Contact Types";
+
+        // Reset the Vendor-Specific filter
+        if (selectedContactType != "Vendors")
+            selectedVendorType = "All Vendors";
+
+        // Refresh the grid
+        if (grid is not null)
+            await grid.RefreshDataAsync();
+    }
+
+    // Event handler for when the user changes the vendor type filter
+    private async void HandleVendorTypeSelection(ChangeEventArgs e)
+    {
+        // Set the Vendors filter with the selected value
+        selectedVendorType = e.Value?.ToString() ?? "All Vendors";
+        
+        // Refresh the grid
+        if (grid is not null)
+            await grid.RefreshDataAsync();
+    }
+
+    #endregion
 }

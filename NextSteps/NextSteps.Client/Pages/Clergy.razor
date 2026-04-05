@@ -1,0 +1,94 @@
+﻿@*
+    Clergy Page
+    4/5/2026
+    ======================================
+    - Initial page creation
+    ======================================
+    Category page for Clergy Tasks
+*@
+
+@using BlazorBootstrap
+@using DataLibrary.Models;
+@using DataLibrary.ServiceLayer.TaskService;
+@using DataLibrary.ServiceLayer.FuneralService;
+@using NextSteps.Client.Components
+@using NextSteps.Client.Shared
+
+<!-- Inject Services -->
+@inject NavigationManager _nav
+@inject BrowserStorageService _storage
+@inject ITaskService _task
+@inject IFuneralService _funeral
+
+<!-- Allows user to interact -->
+@rendermode InteractiveServer
+
+<!-- Override MainLayout from Server and use Client's Custom Layout-->
+@layout CustomLayout
+
+@page "/Clergy"
+
+<!-- Screen Message Modal -->
+<ScreenModal @ref="modal" TitleText="@modalTitle" BodyText="@modalBody" URL="@modalURL" />
+
+
+<div class="page-container">
+
+    <h3>Clergy</h3>
+
+    <!-- Back button to return to category selection/funeral landing page -->
+    <Button Type="ButtonType.Link" To="/funeral">Back to Category Selection</Button>
+
+    <div class="tabs-container">
+
+        <Tabs>
+
+            <Tab Title="Tasks">
+                <Content>
+
+                    <TaskTable FuneralId="@currentFuneral.FuneralId"
+                               Category="Clergy" />
+                    
+                </Content>
+            </Tab>
+
+        </Tabs>
+
+    </div>
+
+</div>
+
+@code {
+
+    private Funeral currentFuneral = new();
+
+    private User currentUser = new();
+
+    #region[MODAL]
+    private ScreenModal modal = default!;
+    private Modal confirmationModal = default!;
+    private string modalTitle = string.Empty;
+    private string modalBody = string.Empty;
+    private string modalURL = string.Empty;
+    #endregion
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            currentUser = await _storage.GetAsync<User>("currentUser") ?? new();
+
+            // Check if the user is signed in. If not, navigate them to the Sign In page
+            if (currentUser is null)
+            {
+                _nav.NavigateTo("/");
+            }
+            else
+            {
+                // Get the selected Funeral from browser storage
+                currentFuneral = await _storage.GetAsync<Funeral>("currentFuneral") ?? new();
+            }
+        }
+        StateHasChanged();
+    }
+}

@@ -1,8 +1,9 @@
 ﻿@*
     Search for Vendors Page
-    4/4/2026
+    4/5/2026
     ======================================
     - Initial page creation
+    - Added error checking for max results limit
     ======================================
 *@
 
@@ -287,7 +288,14 @@
         else if (radius == 0)
         {
             modalTitle = "Error";
-            modalBody = "Radius cannot be 0. Please enter a radius and try again.";
+            modalBody = "Radius cannot be 0. Please enter a valid radius and try again.";
+            await modal.OnShowModalClick();
+            return;
+        }
+        else if (numLimit > 100 || numLimit < 1)
+        {
+            modalTitle = "Error";
+            modalBody = "Maximum number of results must be at least 1 and cannot exceed 100. Please enter a valid number and try again.";
             await modal.OnShowModalClick();
             return;
         }
@@ -306,29 +314,38 @@
 
         if (results is not null)
         {
-            // Iteration through the search results and create contact objects for each to add to the results table
-            foreach (var result in results)
+            if (results.Count() != 0)
             {
-                Contacts.Add
-                (
-                    new Contact
-                    {
-                        ContactName = result["Name"],
-                        ContactType = "Vendor",
-                        VendorType = vendorType,
-                        ContactPhone = result["Phone"],
-                        Location = result["Location"],
-                        IsGlobal = false,
-                        UserId = currentUser.UserId
-                    }
-                );
+                // Iteration through the search results and create contact objects for each to add to the results table
+                foreach (var result in results)
+                {
+                    Contacts.Add
+                    (
+                        new Contact
+                        {
+                            ContactName = result["Name"],
+                            ContactType = "Vendor",
+                            VendorType = vendorType,
+                            ContactPhone = result["Phone"],
+                            Location = result["Location"],
+                            IsGlobal = false,
+                            UserId = currentUser.UserId
+                        }
+                    );
+                }    
+            }
+            else
+            {
+                // Display message to user
+                modalTitle = "No Results Found";
+                modalBody = "No results were found with the input criteria. Please adjust your criteria and try again.";
+                await modal.OnShowModalClick();
             }
 
             // Refresh the Results grid
             if (grid is not null)
                 await grid.RefreshDataAsync();
-
-            PreloadService.Hide();
+            
         }
         else
         {
@@ -337,6 +354,7 @@
             modalBody = "An error occurred and the search failed.";
             await modal.OnShowModalClick();
         }
+        PreloadService.Hide();
     }
 
     // Handle the creation of selected resutls

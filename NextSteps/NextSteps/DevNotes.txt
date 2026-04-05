@@ -4,4 +4,6 @@
 OR
 - Allow updating Status of multiple tasks at a time via selection or row columns
 
-Add "Other" as an option for Contact Type and also maybe Vendor Type
+- Add filter on contact book page
+
+- Add ability to associate a vendor with a category for the funeral

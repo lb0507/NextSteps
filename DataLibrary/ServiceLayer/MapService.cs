@@ -15,7 +15,7 @@ namespace DataLibrary.ServiceLayer.MapService;
 public class MapService(IConfiguration _config) : IMapService
 {
     // Search an input area for businesses that offer a specified type of service
-    public async Task<List<Dictionary<string, string>>?> SearchForService(string category, string location, double radiusInMiles, int limit, string? brandSet = null)
+    public async Task<List<Dictionary<string, string>>?> SearchForService(string category, string location, double radiusInMiles, int limit, string? brand=null)
     {
         try
         {

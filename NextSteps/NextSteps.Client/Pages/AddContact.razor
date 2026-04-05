@@ -195,9 +195,19 @@ Size="ModalSize.Regular">
                 </td>
 
                 <td>
-                    <input type="text"
-                           @bind="contact.ContactEmail"
-                           style="width:50%" />
+                    <div>
+
+                        <input type="text"
+                               @bind="contact.ContactEmail"
+                               style="width:50%" />
+
+                        @if (contactId is not null && contact.ContactEmail is not null && contact.ContactEmail != "")
+                        {
+                            <Button Type="ButtonType.Link" style="margin-left: 10px; width: 120px;" TooltipTitle="Send an email via your default mail app" Color="ButtonColor.Secondary" To=@($"mailto:{contact.ContactEmail}?")>Send Email</Button>
+                        }
+
+                    </div>
+                    
                 </td>
             </tr>
 
@@ -208,9 +218,19 @@ Size="ModalSize.Regular">
                 </td>
 
                 <td>
-                    <input type="text"
-                           @bind="contact.ContactPhone"
-                           style="width:50%" />
+                    
+                    <div>
+
+                        <input type="text"
+                               @bind="contact.ContactPhone"
+                               style="width:50%" />
+
+                        @if (contactId is not null && contact.ContactPhone is not null && contact.ContactPhone != "")
+                        {
+                            <Button Type="ButtonType.Link" style="margin-left: 10px; width: 120px;" TooltipTitle="Requires an external app for phone calls" Color="ButtonColor.Secondary" To=@($"tel:{contact.ContactPhone}?")>Call</Button>
+                        }
+
+                    </div>
                 </td>
             </tr>
 
@@ -310,10 +330,11 @@ Size="ModalSize.Regular">
         "Family",
         "Vendor",
         "Medical",
-        "Legal"
+        "Legal",
+        "Other"
     };
 
-    // List of types for is the contact type is Vendor
+    // List of types for if the contact type is Vendor
     private List<string> VendorTypes = new List<string>
     {
         "Florist",
