@@ -34,6 +34,7 @@
 
 <div class="page-container">
 
+    <!-- Page Title -->
     <h3>Body Preparation</h3>
 
     <!-- Back button to return to category selection/funeral landing page -->
@@ -46,6 +47,7 @@
             <Tab Title="Tasks">
                 <Content>
 
+                    <!-- Task Table Component for Body Preparation Tasks -->
                     <TaskTable FuneralId="@currentFuneral.FuneralId"
                                Category="Body Preparation" />
                     
@@ -62,7 +64,7 @@
 
     private Funeral currentFuneral = new();
 
-    private User currentUser = new();
+    private User? currentUser;
 
     #region[MODAL]
     private ScreenModal modal = default!;
@@ -90,6 +92,7 @@
                 currentFuneral = await _storage.GetFromStorage<Funeral>("currentFuneral") ?? new();
             }
         }
+        // Rerender the page
         StateHasChanged();
     }
 }

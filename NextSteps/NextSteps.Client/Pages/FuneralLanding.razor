@@ -50,11 +50,11 @@
             <tr>
 
                 <td>
-                    <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" Class="mb-4" Style="width:18rem;" @onclick="@(() => _nav.NavigateTo("/General Info"))">
+                    <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" Class="mb-4" Style="width:18rem;" @onclick="@(() => _nav.NavigateTo("/Funeral Info"))">
                         <CardBody>
                             <Icon Name="IconName.InfoCircleFill" Size="IconSize.x1" Color="IconColor.Light" />
                             <br>
-                            <Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/General Info">General Info</Button>
+                            <Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/Funeral Info">Funeral Info</Button>
                         </CardBody>
                     </Card>
                 </td>
@@ -146,7 +146,7 @@
 
     private Funeral currentFuneral = new();
 
-    private User currentUser = new();
+    private User? currentUser;
 
     double taskProgress = 0;
 

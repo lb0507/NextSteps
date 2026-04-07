@@ -31,9 +31,9 @@
 <!-- Screen Message Modal -->
 <ScreenModal @ref="modal" TitleText="@modalTitle" BodyText="@modalBody" URL="@modalURL" />
 
-
 <div class="page-container">
 
+    <!-- Page Title -->
     <h3>Venue</h3>
 
     <!-- Back button to return to category selection/funeral landing page -->
@@ -46,6 +46,7 @@
             <Tab Title="Tasks">
                 <Content>
 
+                    <!-- Task Table Component for Venue Tasks -->
                     <TaskTable FuneralId="@currentFuneral.FuneralId"
                                Category="Venue" />
                     
@@ -62,7 +63,7 @@
 
     private Funeral currentFuneral = new();
 
-    private User currentUser = new();
+    private User? currentUser;
 
     #region[MODAL]
     private ScreenModal modal = default!;

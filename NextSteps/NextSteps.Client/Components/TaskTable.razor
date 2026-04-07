@@ -26,7 +26,7 @@
 
 <div class="task-table-container">
 
-    <!-- Task Table -->
+    <!-- Task Table Container -->
     <div class="table-container">
 
         <!-- Table of Task objects -->
@@ -35,7 +35,6 @@
               AllowFiltering="true"
               AllowPaging="true"
               AllowSorting="true"
-              AllowSelection="true"
               AllowRowClick="true"
               OnRowDoubleClick="OnRowDoubleClick"
               Class="table table-hover table-bordered table-striped"
@@ -43,8 +42,7 @@
               PageSize="10"
               Responsive="true"
               RowKeySelector="(task) => task.TaskId"
-              SelectedItemsChanged="OnSelectedItemsChanged"
-              SelectionMode="GridSelectionMode.Multiple">
+              >
 
             <GridColumns>
                 <!-- Task Number Column -->
@@ -99,15 +97,8 @@
     private List<NsTask> Tasks = new();
     private BlazorBootstrap.Grid<NsTask>? grid;
 
-    private HashSet<NsTask> selectedTasks = new();
-
+    // Populate the grid with tasks
     private async Task<GridDataProviderResult<NsTask>> TasksDataProvider(GridDataProviderRequest<NsTask> request) => await Task.FromResult(request.ApplyTo(Tasks));
-
-    private Task OnSelectedItemsChanged(HashSet<NsTask> tasks)
-    {
-        selectedTasks = tasks is not null && tasks.Any() ? tasks : new();
-        return Task.CompletedTask;
-    }
 
     // On Clicking a row in the table, navigate to the details page of that corresponding Task
     private async Task OnRowDoubleClick(GridRowEventArgs<NsTask> args) => _nav.NavigateTo($"/task/{args.Item.TaskId}");
@@ -116,8 +107,10 @@
 
     protected override async Task OnParametersSetAsync()
     {
+        // Show loading spinner
         PreloadService.Show(SpinnerColor.Dark);
 
+        // Wait until the parameters are set
         await base.OnParametersSetAsync();
 
         // Fetch the tasks for this category and Funeral
@@ -132,12 +125,15 @@
 
         if (Tasks.Count() != 0)
         {
+            // If there are tasks, get the number of completed tasks and number of all tasks
             completedTasks = Tasks.Where(t => t.IsComplete == true).Count();
             allTasks = Tasks.Count();
         }
 
+        // Hide loading spinner
         PreloadService.Hide();
 
+        // Rerender the page
         await InvokeAsync(StateHasChanged);
     }
 }

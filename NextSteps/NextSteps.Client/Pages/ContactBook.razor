@@ -59,6 +59,7 @@
             </select>
         </div>
 
+        @* If the selected contact type is Vendor, show the vendor type filter *@
         @if (selectedContactType == "Vendor")
         {
             <!-- VENDOR TYPE -->
@@ -77,11 +78,8 @@
                 </select>
 
             </div>
-        
         }
-
     </div>
-    
 
     <!-- Table of Contact objects -->
     <Grid TItem="Contact"
@@ -122,10 +120,11 @@
         <Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/add-contact">Add Contact</Button>
 
         <!-- Add New Contacts Via Search -->
-        <Button Type="ButtonType.Link" Color="ButtonColor.Secondary" To="/add-vendors-search">Search for Vendors</Button>
+        <Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/add-vendors-search">Search for Vendors</Button>
 
         <!-- Refresh the Grid -->
         <Button Color="ButtonColor.Secondary" @onclick="@(async () => { if (grid is not null) await grid.RefreshDataAsync(); StateHasChanged(); })">Refresh</Button>
+
    </div>
 
 </div>
@@ -136,7 +135,7 @@
 
     private List<Contact> Contacts = new();
 
-    private User currentUser = new();
+    private User? currentUser;
     private Funeral currentFuneral = new();
 
     #region [FILTER]

@@ -27,11 +27,13 @@ public class MapService(IConfiguration _config) : IMapService
 
             using (HttpClient httpClient = new HttpClient())
             {
+                // Get the URI to the Azure Maps account and subscription key from the key vault
                 httpClient.BaseAddress = new Uri(_config["MapsUri"] ?? string.Empty);
                 httpClient.DefaultRequestHeaders.Add("Subscription-Key", _config["MapsSubscriptionKey"]);
 
                 // Use HttpClient to call the Azure Maps Search API for point-of-interest search
-                HttpResponseMessage response = await httpClient.GetAsync(
+                HttpResponseMessage response = await httpClient.GetAsync
+                (
                     $"https://atlas.microsoft.com/search/poi/json" +
                     $"?api-version=1.0" +
                     $"&query={Uri.EscapeDataString(category)}" +
@@ -39,7 +41,7 @@ public class MapService(IConfiguration _config) : IMapService
                     $"&lon={position.Value.Item2}" +
                     $"&radius={radiusInMeters}" +
                     $"&limit={limit}"
-                    );
+                );
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -89,16 +91,18 @@ public class MapService(IConfiguration _config) : IMapService
         {
             using (HttpClient httpClient = new HttpClient())
             {
+                // Get the URI to the Azure Maps account and subscription key from the key vault
                 httpClient.BaseAddress = new Uri(_config["MapsUri"] ?? string.Empty);
                 httpClient.DefaultRequestHeaders.Add("Subscription-Key", _config["MapsSubscriptionKey"]);
 
-                // Use HttpClient to call the Azure Maps Search API for fuzzy location search
-                HttpResponseMessage response = await httpClient.GetAsync(
-                        $"https://atlas.microsoft.com/search/fuzzy/json" +
-                        $"?api-version=1.0" +
-                        $"&query={Uri.EscapeDataString(location)}" +
-                        $"&limit=1" 
-                    );
+                // Use HttpClient to call the Azure Maps Search API for fuzzy search
+                HttpResponseMessage response = await httpClient.GetAsync
+                (
+                    $"https://atlas.microsoft.com/search/fuzzy/json" +
+                    $"?api-version=1.0" +
+                    $"&query={Uri.EscapeDataString(location)}" +
+                    $"&limit=1" 
+                );
 
                 if (response.IsSuccessStatusCode)
                 {

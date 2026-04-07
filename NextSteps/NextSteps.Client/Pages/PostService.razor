@@ -31,9 +31,9 @@
 <!-- Screen Message Modal -->
 <ScreenModal @ref="modal" TitleText="@modalTitle" BodyText="@modalBody" URL="@modalURL" />
 
-
 <div class="page-container">
 
+    <!-- Page title -->
     <h3>Post-Service</h3>
 
     <!-- Back button to return to category selection/funeral landing page -->
@@ -46,6 +46,7 @@
             <Tab Title="Tasks">
                 <Content>
 
+                    <!-- Task Table Component for Post-Service Tasks -->
                     <TaskTable FuneralId="@currentFuneral.FuneralId"
                                Category="Post-Service" />
                     
@@ -62,7 +63,7 @@
 
     private Funeral currentFuneral = new();
 
-    private User currentUser = new();
+    private User? currentUser;
 
     #region[MODAL]
     private ScreenModal modal = default!;
@@ -90,6 +91,7 @@
                 currentFuneral = await _storage.GetFromStorage<Funeral>("currentFuneral") ?? new();
             }
         }
+        // Rerender the page
         StateHasChanged();
     }
 }

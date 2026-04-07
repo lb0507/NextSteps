@@ -4,6 +4,12 @@
 OR
 - Allow updating Status of multiple tasks at a time via selection or row columns
 
-- Add filter on contact book page
-
 - Add ability to associate a vendor with a category for the funeral
+
+- Fix inserting/updating nullable values in db calls
+
+- Add remaining input fields to Add funeral modal
+
+- Add archiving to funerals
+
+- Fix editContext thing for signin/signout

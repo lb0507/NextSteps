@@ -44,6 +44,7 @@
 
         @if (newNote)
         {
+            <!-- Input area for note text -->
             <div class="modal-body">
                 <textarea class="notes-desc-input"
                           @bind="newNoteText"
@@ -52,6 +53,7 @@
         }
         else
         {
+            <!-- If this is an existing note, display the note text as read-only -->
             <div class="modal-body">
                 <textarea class="notes-desc-input"
                           @bind="selectedNote.NoteText" 
@@ -59,6 +61,7 @@
                           rows="8" />
             </div>
 
+            <!-- Display the date and time the note was created -->
             <div class="modal-body">
                 <label>Creation Date:</label>
                 <span>@selectedNote.CreationDate.ToString("dd MMM yyyy HH:mm")</span>
@@ -66,15 +69,20 @@
         }
 
     </BodyTemplate>
+
     <FooterTemplate>
+
+        <!-- Close Button -->
         <Button Color="ButtonColor.Secondary" @onclick="OnHideModalClick">Close</Button>
         
         @if (newNote)
         {
+            <!-- Save Note Button -->
             <Button Color="ButtonColor.Primary" @onclick="HandleAttachNote">Save</Button>
         }
         else
         {
+            <!-- Delete Note Button -->
             <Button Color="ButtonColor.Danger" @onclick="HandleNoteDeletion">Delete</Button>
         }
 
@@ -85,8 +93,8 @@
 <!-- Modal for Confirming the Deletion of the Task -->
 <Modal @ref="confirmationModal" Title="Confirm Deletion?"
        IsVerticallyCentered
-       Size="ModalSize.Regular"
-       >
+       Size="ModalSize.Regular">
+
     <BodyTemplate>
 
         <div class="modal-body">
@@ -94,10 +102,13 @@
         </div>
 
     </BodyTemplate>
+
     <FooterTemplate>
 
+        <!-- Cancel Button -->
         <Button Color="ButtonColor.Secondary" @onclick="confirmationModal.HideAsync">Cancel</Button>
         
+        <!-- Delete Button -->
         <Button Color="ButtonColor.Danger" @onclick="HandleTaskDeletion">Delete</Button>
 
     </FooterTemplate>
@@ -106,8 +117,10 @@
 
 <div class="page-container" style="display: flex; width: 100%;  height: 85vh;">
     
+    <!-- Task Details Section - Left Side of Screen -->
     <div class="task-details" style=" width: 70%; border-right: 1px solid midnightblue; height: 100%">
 
+        <!-- Page Title -->
         @if (taskId is null)
         {
             <h3>Add Task</h3>
@@ -117,6 +130,7 @@
             <h3>Task Details</h3>
         }
 
+        <!-- Table for formatting the input fields for Task Details -->
         <table style="width: 98%;">
 
             <colgroup>
@@ -171,6 +185,7 @@
                 </td>
 
                 <td>
+                    <!-- Display Task Category -->
                     @if (category is null)
                     {
                         <input type="text"
@@ -244,19 +259,25 @@
 
         <div class="task-buttons">
 
+            <!-- Back Button to return to Category page -->
             <Button Type="ButtonType.Link" Color="ButtonColor.Secondary" To="@($"/{backURL}")">Back</Button>
 
+            <!-- Delete Task Button (if not a new task) -->
             @if (taskId is not null)
             {
                 <Button Color="ButtonColor.Danger" @onclick="HandleTaskDeletionConfirmation">Delete Task</Button>
             }
             
+            <!-- Save Task Button -->
             <Button Color="ButtonColor.Primary" @onclick="HandleSave">Save Task</Button>
 
         </div>
     </div>
     
+    <!-- Notes Section - Right Side of Screen -->
     <div class="notes-section" style="width: 30%; padding-left: 20px; height: 100%;">
+
+        <!-- Container for the Notes table -->
         <div class="notes-table" style="max-height: 95%; overflow: auto; background-color: lightgray">
 
             <!-- Table of Notes for this Task-->
@@ -288,6 +309,7 @@
 
         </div>
 
+        <!-- Attach Note Button -->
         <div class="notes-buttons">
             <Button Color="ButtonColor.Secondary" @onclick="() => OnShowModalClick(true)">Attach Note</Button>
         </div>
@@ -308,7 +330,7 @@
     private NsTask task = new();
     private bool taskStatus = false;
 
-    private User currentUser = new();
+    private User? currentUser;
 
     private Funeral currentFuneral = new();
 
@@ -329,6 +351,7 @@
 
     private Note selectedNote = new();
 
+    // Populate the grid with notes for this Task
     private async Task<GridDataProviderResult<Note>> TasksDataProvider(GridDataProviderRequest<Note> request) => await Task.FromResult(request.ApplyTo(Notes));
 
     // On Clicking a row in the table, open a modal displaying the details of the Note
@@ -337,7 +360,6 @@
         selectedNote = args.Item;
         await OnShowModalClick(false);
     }
-
     #endregion
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -351,6 +373,7 @@
             if (currentUser is null)
                 _nav.NavigateTo("/");
 
+            // Get the current funeral from browser storage
             currentFuneral = await _storage.GetFromStorage<Funeral>("currentFuneral") ?? new();
 
             // If a TaskId was passed in through the URL, use it to pull the Task object
@@ -385,12 +408,12 @@
                     backURL = task.Category;
                     break;
             }
-
+            // Rerender the page
             StateHasChanged();
         }
     }
 
-    // Create or Update the Task
+    // Handle Creating or Updating the Task
     private async Task HandleSave()
     {
         // Display an error message to the user if they attempt to save a Task without entering a description
@@ -406,6 +429,7 @@
 
         if (taskId is null)
         {
+            // Set the funeral Id and Task number for new task
             task.FuneralId = currentFuneral.FuneralId;
             task.TaskNumber = $"Task-{currentFuneral.NumberOfTasks + 1}";
 
@@ -442,12 +466,16 @@
         }
     }
 
+    // Upon clicking the delete button for a task, show a confirmation modal
     private async Task HandleTaskDeletionConfirmation() => await confirmationModal.ShowAsync();
 
+    // Handle Task deletion
     private async Task HandleTaskDeletion()
     {
+        // Hide the confirmation modal
         await confirmationModal.HideAsync();
 
+        // Delete the Task
         var result = await _task.DeleteTask(taskId ?? Guid.Empty);
 
         if (result)

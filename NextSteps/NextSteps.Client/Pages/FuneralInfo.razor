@@ -1,11 +1,11 @@
 ﻿@*
-    General Info Page
+    Funeral Info Page
     3/28/2026
     ======================================
     - Initial page creation
     - Added saving functionality for funeral info and funeral deletion
     ======================================
-    Category page for General Funeral Information
+    Category page for Funeral Information
 *@
 
 @using BlazorBootstrap
@@ -27,7 +27,7 @@
 <!-- Override MainLayout from Server and use Client's Custom Layout-->
 @layout CustomLayout
 
-@page "/General Info"
+@page "/Funeral Info"
 
 <!-- Screen Message Modal -->
 <ScreenModal @ref="modal" TitleText="@modalTitle" BodyText="@modalBody" URL="@modalURL" />
@@ -46,8 +46,10 @@
     </BodyTemplate>
     <FooterTemplate>
 
+        <!-- Cancel Deletion Button -->
         <Button Color="ButtonColor.Secondary" @onclick="confirmationModal.HideAsync">Cancel</Button>
         
+        <!-- Confirm Deletion Button -->
         <Button Color="ButtonColor.Danger" @onclick="HandleDeletion">Delete</Button>
 
     </FooterTemplate>
@@ -57,7 +59,7 @@
 
 <div class="page-container">
 
-    <h3>General Info</h3>
+    <h3>Funeral Info</h3>
 
     <!-- Back button to return to category selection/funeral landing page -->
     <Button Type="ButtonType.Link" To="/funeral">Back to Category Selection</Button>
@@ -67,9 +69,10 @@
             <Tab Title="Tasks">
                 <Content>
 
+                    <!-- Task Table for Basic Funeral Tasks -->
                     <TaskTable 
                         FuneralId="@currentFuneral.FuneralId"
-                        Category="General Info"/>
+                        Category="Funeral Info" />
                     
                 </Content>
             </Tab>
@@ -132,8 +135,10 @@
 
                         <div class="buttons">
 
+                            <!-- Delete Funeral Button -->
                             <Button Color="ButtonColor.Danger" @onclick="HandleDeletionConfirmation">Delete this Funeral</Button>
             
+                            <!-- Save Funeral Info Button -->
                             <Button Color="ButtonColor.Primary" @onclick="HandleSave">Save Funeral Info</Button>
 
                         </div>
@@ -153,7 +158,7 @@
 
     private Funeral currentFuneral = new();
 
-    private User currentUser = new();
+    private User? currentUser;
 
     #region[MODAL]
     private ScreenModal modal = default!;
@@ -184,6 +189,7 @@
         StateHasChanged();
     }
 
+    // Handle saving funeral info
     private async Task HandleSave()
     {
         // Display an error message to the user if they attempt to save the funeral info without entering a description
@@ -195,6 +201,7 @@
             return;
         }
 
+        // Update the funeral
         var result = await _funeral.UpdateFuneral(currentFuneral);
 
         if (result is not null)

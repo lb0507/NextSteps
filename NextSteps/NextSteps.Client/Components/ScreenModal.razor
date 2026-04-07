@@ -11,13 +11,19 @@
 
 @inject NavigationManager _nav
 
+<!-- Modal component with custom title -->
 <Modal @ref="modal" Title=@TitleText>
+
+    <!-- Body of the modal with custom text -->
     <BodyTemplate>
-        @BodyText
+        @BodyText 
     </BodyTemplate>
+
+    <!-- Button to close the modal -->
     <FooterTemplate>
         <Button Color="ButtonColor.Secondary" @onclick="OnHideModalClick">Close</Button>
     </FooterTemplate>
+
 </Modal>
 
 @code {
@@ -29,20 +35,18 @@
     public string BodyText { get; set; } = string.Empty;
 
     [Parameter]
-    public string Title { get; set; } = string.Empty;
-
-    [Parameter]
     public string? URL { get; set; }
 
     private Modal modal = default!;
 
-    public async Task OnShowModalClick()
-    {
-        await modal.ShowAsync();
-    }
+
+    // Open the modal
+    public async Task OnShowModalClick() => await modal.ShowAsync();
+
 
     private async Task OnHideModalClick()
     {
+        // Close the modal
         await modal.HideAsync();
 
         // If a URL was passed in, navigate to it after hiding the modal

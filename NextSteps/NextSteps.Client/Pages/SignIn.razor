@@ -58,12 +58,16 @@
             <!-- Clear Form button -->
             <Button Color="ButtonColor.Secondary" @onclick="HandleClearForm">Clear Form</Button>
         </div>
+
     </EditForm>
+
     <!-- CheckBox for toggling password visibility -->
     <div id="chkbx">
         <input type="checkbox" id="show-password" @onclick="@(() => { showPassword = !showPassword; pwVisibility = showPassword ? "text" : "password"; })">
         <label for="show-password"> Show </label>
     </div>
+
+    <!-- Link to Sign Up Page -->
     <p><i>Don't have an account?</i> <a href="/signup">Sign Up</a> </p>
 </div>
 
@@ -83,6 +87,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Make sure the input fields are empty upon loading the page
         HandleClearForm();
     }
 
@@ -90,21 +95,27 @@
     {
         if (firstRender)
         {
+            // Get the current user from storage
             var currentUser = await _storage.GetFromStorage<User>("currentUser");
+
+            // If user in browser storage is not null, automatically sign them in
             if (currentUser is not null)
             {
-                Console.WriteLine($"user is now: {currentUser?.FirstName}");
+                Console.WriteLine($"User is now: {currentUser?.FirstName}");
                 _nav.NavigateTo("/funeral-selection");
             }
         }
     }
 
+    // Handle User Log In
     private async Task HandleLogin()
     {
+        // Log in the user
         var result = await _user.LoginUser(user.Email, user.Password);
 
         if (result is not null)
         {
+            // If login was valid, set the user in browser storage
             await _storage.SetInStorage("currentUser", result);
 
             _nav.NavigateTo("/funeral-selection");
@@ -113,11 +124,18 @@
             await modal.OnShowModalClick();
     }
 
+    // Handle clearing the input fields
     private void HandleClearForm()
     {
+        // Replace the user with a new instance
         user = new(); 
+
+        // Add placeholder text for non included user attributes for the DataAnnotationsValidator
+        // Note: this is a temporary work around and will be changed later
         user.FirstName = "placeholder";
         user.ConfirmPassword = "placeholder";
+
+        // Replace the EditContext with a new instance
         editContext = new EditContext(user);
     }
     #endregion

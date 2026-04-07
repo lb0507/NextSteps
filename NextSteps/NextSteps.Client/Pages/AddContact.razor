@@ -40,10 +40,11 @@
        IsVerticallyCentered
        Size="ModalSize.Large"
        Class="note-modal">
+
     <BodyTemplate>
 
         @if (newNote)
-        {
+        {   <!-- Input area for note text -->
             <div class="modal-body">
                 <textarea class="notes-desc-input"
                 @bind="newNoteText"
@@ -51,14 +52,15 @@
             </div>
         }
         else
-        {
+        {   <!-- If this is an existing note, display the note text as read-only -->
             <div class="modal-body">
                 <textarea class="notes-desc-input"
                 @bind="selectedNote.NoteText"
                 readonly
                 rows="8" />
             </div>
-
+            
+            <!-- Display the date and time the note was created -->
             <div class="modal-body">
                 <label>Creation Date:</label>
                 <span>@selectedNote.CreationDate.ToString("dd MMM yyyy HH:mm")</span>
@@ -66,15 +68,20 @@
         }
 
     </BodyTemplate>
+
     <FooterTemplate>
+
+        <!-- Close Button -->
         <Button Color="ButtonColor.Secondary" @onclick="OnHideModalClick">Close</Button>
 
         @if (newNote)
         {
+            <!-- Save Note Button -->
             <Button Color="ButtonColor.Primary" @onclick="HandleAttachNote">Save</Button>
         }
         else
         {
+            <!-- Delete Note Button -->
             <Button Color="ButtonColor.Danger" @onclick="HandleNoteDeletion">Delete</Button>
         }
 
@@ -84,8 +91,9 @@
 
 <!-- Modal for Confirming the Deletion of the Task -->
 <Modal @ref="confirmationModal" Title="Confirm Deletion?"
-IsVerticallyCentered
-Size="ModalSize.Regular">
+    IsVerticallyCentered
+    Size="ModalSize.Regular">
+
     <BodyTemplate>
 
         <div class="modal-body">
@@ -93,10 +101,13 @@ Size="ModalSize.Regular">
         </div>
 
     </BodyTemplate>
+
     <FooterTemplate>
 
+        <!-- Cancel Button -->
         <Button Color="ButtonColor.Secondary" @onclick="confirmationModal.HideAsync">Cancel</Button>
 
+        <!-- Delete Button -->
         <Button Color="ButtonColor.Danger" @onclick="HandleTaskDeletion">Delete</Button>
 
     </FooterTemplate>
@@ -105,8 +116,10 @@ Size="ModalSize.Regular">
 
 <div class="page-container" style="display: flex; width: 100%;  height: 85vh;">
 
+    <!-- Contact Details Section - Left Side of Screen -->
     <div class="contact-details" style=" width: 70%; border-right: 1px solid midnightblue; height: 100%">
 
+        <!-- Page Title -->
         @if (contactId is null)
         {
             <h3>Add Contact</h3>
@@ -116,6 +129,7 @@ Size="ModalSize.Regular">
             <h3>Contact Details</h3>
         }
 
+        <!-- Table for formatting the input fields for Contact Details -->
         <table style="width: 98%;">
 
             <colgroup>
@@ -124,7 +138,6 @@ Size="ModalSize.Regular">
             <colgroup>
                 <col span="1" style="width: 70%" />
             </colgroup>
-
 
             <!-- CONTACT NAME -->
             <tr>
@@ -147,7 +160,7 @@ Size="ModalSize.Regular">
                 </td>
 
                 <td>
-                    <!-- Selection menu for the Task Status -->
+                    <!-- Selection menu for the Contact Type -->
                     <InputSelect style="height: 4vh; width: 50%" @bind-Value="@contact.ContactType">
 
                         @if (contactId is null)
@@ -158,11 +171,11 @@ Size="ModalSize.Regular">
                         {
                             <option>@type</option>
                         }
-
                     </InputSelect>
                 </td>
             </tr>
 
+            @* If the selected contact type is "Vendor", provide another filter for specifying vendor type *@
             @if (contact.ContactType == "Vendor")
             {
                 <!-- VENDOR TYPE -->
@@ -172,7 +185,7 @@ Size="ModalSize.Regular">
                     </td>
 
                     <td>
-                        <!-- Selection menu for the Task Status -->
+                        <!-- Selection menu for the Vendor Type -->
                         <InputSelect style="height: 4vh; width: 50%" @bind-Value="@contact.VendorType">
 
                             @if (contactId is null)
@@ -198,10 +211,12 @@ Size="ModalSize.Regular">
                 <td>
                     <div>
 
+                        <!-- Input field for contact's email address -->
                         <input type="text"
                                @bind="contact.ContactEmail"
                                style="width:50%" />
 
+                        @* If there is an email address in the input field, display a button with a mailto link *@
                         @if (contactId is not null && contact.ContactEmail is not null && contact.ContactEmail != "")
                         {
                             <Button Type="ButtonType.Link" style="margin-left: 10px; width: 120px;" TooltipTitle="Send an email via your default mail app" Color="ButtonColor.Secondary" To=@($"mailto:{contact.ContactEmail}?")>Send Email</Button>
@@ -219,13 +234,14 @@ Size="ModalSize.Regular">
                 </td>
 
                 <td>
-                    
                     <div>
 
+                        <!-- Input field for contact's phone number -->
                         <input type="text"
                                @bind="contact.ContactPhone"
                                style="width:50%" />
 
+                        @* If there is a phone number in the input field, display a button with a tel link *@
                         @if (contactId is not null && contact.ContactPhone is not null && contact.ContactPhone != "")
                         {
                             <Button Type="ButtonType.Link" style="margin-left: 10px; width: 120px;" TooltipTitle="Requires an external app for phone calls" Color="ButtonColor.Secondary" To=@($"tel:{contact.ContactPhone}?")>Call</Button>
@@ -242,6 +258,7 @@ Size="ModalSize.Regular">
                 </td>
 
                 <td>
+                    <!-- Input field for contact's location/address -->
                     <input type="text"
                            @bind="contact.Location"
                            style="width:50%" />
@@ -254,6 +271,7 @@ Size="ModalSize.Regular">
                     <label>Make Contact Available Across All Funerals?</label>
                 </td>
 
+                <!-- Radio buttons for setting the global flag -->
                 <td class="radio-buttons">
                     <InputRadioGroup @bind-Value="contact.IsGlobal" TValue="bool" >
                         <div class="radio-option"> <InputRadio Value="true" /> Yes </div>
@@ -266,19 +284,26 @@ Size="ModalSize.Regular">
 
         <div class="contact-buttons">
 
+            <!-- Back Button to return to Contact Book -->
             <Button Type="ButtonType.Link" Color="ButtonColor.Secondary" To="/contactbook">Back</Button>
 
+            <!-- Delete Contact Button (if not a new contact) -->
             @if (contactId is not null)
             {
                 <Button Color="ButtonColor.Danger" @onclick="HandleContactDeletionConfirmation">Delete Contact</Button>
             }
 
+            <!-- Save Contact Button -->
             <Button Color="ButtonColor.Primary" @onclick="HandleSave">Save Contact</Button>
 
         </div>
+
     </div>
 
+    <!-- Notes Section - Right Side of Screen -->
     <div class="notes-section" style="width: 30%; padding-left: 20px; height: 100%;">
+
+        <!-- Container for the Notes table -->
         <div class="notes-table" style="max-height: 95%; overflow: auto; background-color: lightgray">
 
             <!-- Table of Notes for this Task-->
@@ -310,6 +335,7 @@ Size="ModalSize.Regular">
 
         </div>
 
+        <!-- Attach Note Button -->
         <div class="notes-buttons">
             <Button Color="ButtonColor.Secondary" @onclick="() => OnShowModalClick(true)">Attach Note</Button>
         </div>
@@ -345,7 +371,7 @@ Size="ModalSize.Regular">
         "Other"
     };
 
-    private User currentUser = new();
+    private User? currentUser;
     private Funeral currentFuneral = new();
 
     #region[MODAL]
@@ -365,6 +391,7 @@ Size="ModalSize.Regular">
 
     private Note selectedNote = new();
 
+    // Populate the Notes table with the note objects
     private async Task<GridDataProviderResult<Note>> TasksDataProvider(GridDataProviderRequest<Note> request) => await Task.FromResult(request.ApplyTo(Notes));
 
     // On Clicking a row in the table, open a modal displaying the details of the Note
@@ -387,6 +414,7 @@ Size="ModalSize.Regular">
             if (currentUser is null)
                 _nav.NavigateTo("/");
 
+            // Get the current funeral from browser storage
             currentFuneral = await _storage.GetFromStorage<Funeral>("currentFuneral") ?? new();
 
             // If a TaskId was passed in through the URL, use it to pull the Task object
@@ -403,6 +431,7 @@ Size="ModalSize.Regular">
                     await grid.RefreshDataAsync();
             }
 
+            // Rerender the page
             StateHasChanged();
         }
     }
@@ -418,6 +447,7 @@ Size="ModalSize.Regular">
             await modal.OnShowModalClick();
             return;
         }
+        // Display an error message to the user if they attempt to save a Contact without selecting a contact type
         else if (string.IsNullOrWhiteSpace(contact.ContactType))
         {
             modalTitle = "Error";
@@ -434,12 +464,12 @@ Size="ModalSize.Regular">
 
         if (contactId is null)
         {
-            // If the user selected for the contact to be available across all funerals, add the current funeral id
+            // If the user selected for the contact to be available only to this funeral, add the current funeral id
             if (!contact.IsGlobal)
                 contact.FuneralId = currentFuneral.FuneralId;
             
             // Set the user id
-            contact.UserId = currentUser.UserId;
+            contact.UserId = currentUser?.UserId ?? Guid.Empty;
 
             // Create the Contact
             result = await _contact.CreateContact(contact);
@@ -452,13 +482,6 @@ Size="ModalSize.Regular">
 
         if (result is not null)
         {
-            // Update the number of contacts for the funeral if the contact is new
-            if (contactId is null)
-            {
-                currentFuneral = await _funeral.UpdateTaskNumber(currentFuneral) ?? new();
-                await _storage.SetInStorage("currentFuneral", currentFuneral);
-            }
-
             // Display success message to user and redirect them back to the category page
             modalTitle = "Save Successful";
             modalBody = "The contact has been saved successfully.";
@@ -606,7 +629,5 @@ Size="ModalSize.Regular">
             await modal.OnShowModalClick();
         }
     }
-
     #endregion
-
 }

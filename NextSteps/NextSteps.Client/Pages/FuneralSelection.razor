@@ -102,10 +102,10 @@
 @code {
     [Inject]
     protected PreloadService PreloadService { get; set; } = default!;
-
+    
     private List<Funeral> Funerals = new();
 
-    private User currentUser = new();
+    private User? currentUser;
 
     #region[MODAL]
     private ScreenModal resultModal = default!;
@@ -181,7 +181,7 @@
             new Funeral
             {
                 DeceasedName = name,
-                UserId = currentUser.UserId
+                UserId = currentUser?.UserId ?? Guid.Empty
             }
         );
 
@@ -195,7 +195,7 @@
             await OnHideModalClick();
 
             modalTitle = "Success";
-            modalBody = "To modify or delete the funeral, go to the \"Info\" tab of the \"General Info\" category.";
+            modalBody = "To modify or delete the funeral, go to the \"Info\" tab of the \"Funeral Info\" category.";
             await resultModal.OnShowModalClick();
         }
         else

@@ -221,7 +221,7 @@
         "Other"
     };
 
-    private User currentUser = new();
+    private User? currentUser;
     private Funeral currentFuneral = new();
 
     #region[MODAL]
@@ -261,8 +261,6 @@
                 _nav.NavigateTo("/");
 
             currentFuneral = await _storage.GetFromStorage<Funeral>("currentFuneral") ?? new();
-
-
 
             StateHasChanged();
         }

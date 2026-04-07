@@ -34,41 +34,56 @@
 
 <div class="page-container">
 
+    <!-- Page Title -->
     <h3>Vendors</h3>
 
+    <!-- Button to return to the Funeral Landing page -->
     <Button Type="ButtonType.Link" To="/funeral">Back to Category Selection</Button>
 
     <div class="tabs-container">
         <Tabs @ref="tabs">
+
+            <!-- FLORIST TAB -->
             <Tab Title="Floralist">
                 <Content>
 
+                    <!-- Task Table Component for Florist Tasks -->
                     <TaskTable 
                         FuneralId="@currentFuneral.FuneralId"
                         Category="Florist"/>
                     
                 </Content>
             </Tab>
+
+            <!-- PHOTOGRAPHY TAB -->
             <Tab Title="Photography">
                 <Content>
 
-                    <TaskTable FuneralId="@currentFuneral.FuneralId"
-                               Category="Photography" />
+                    <!-- Task Table Component for Photography Tasks -->
+                    <TaskTable 
+                        FuneralId="@currentFuneral.FuneralId"
+                        Category="Photography" />
                     
                 </Content>
             </Tab>
+
+            <!-- CATERING TAB -->
             <Tab Title="Catering">
                 <Content>
 
+                    <!-- Task Table Component for Catering Tasks -->
                     <TaskTable 
                         FuneralId="@currentFuneral.FuneralId"
                         Category="Catering"/>
                     
                 </Content>
             </Tab>
+
+            <!-- MUSIC TAB -->
             <Tab Title="Music">
                 <Content>
 
+                    <!-- Task Table Component for Music Tasks-->
                     <TaskTable 
                         FuneralId="@currentFuneral.FuneralId"
                         Category="Music"/>
@@ -90,7 +105,7 @@
 
     private Funeral currentFuneral = new();
 
-    private User currentUser = new();
+    private User? currentUser;
 
     #region[MODAL]
     private ScreenModal modal = default!;
@@ -117,6 +132,7 @@
                 currentFuneral = await _storage.GetFromStorage<Funeral>("currentFuneral") ?? new();
             }
 
+            // If the category is Vendors, open to the tab of the type of vendor if specified in the URL
             if (Category is not null)
             {
                 switch (Category)
@@ -137,9 +153,9 @@
                         await tabs.ShowTabByIndexAsync(0);
                         break;
                 }
-
             }
         }
+        // Rerender the page
         StateHasChanged();
     }
 }
