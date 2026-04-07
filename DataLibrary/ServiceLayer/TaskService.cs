@@ -31,12 +31,14 @@ namespace DataLibrary.ServiceLayer.TaskService
             var tasks = new List<NsTask>();
             try
             {
+                // Get the database connection string from Azure Key Vault and establish connection
                 using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
                     await conn.OpenAsync();
 
                     using (SqlCommand cmd = new SqlCommand("SELECT * FROM Tasks WHERE TaskId = @TaskId", conn))
                     {
+                        // Add the parameters values to the query
                         cmd.Parameters.AddWithValue("@TaskId", id);
 
                         using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
@@ -47,11 +49,11 @@ namespace DataLibrary.ServiceLayer.TaskService
                                 {
                                     TaskId = reader.GetGuid(0),
                                     TaskNumber = reader.GetString(1),
-                                    Description = HanldeGetString(reader, colIdx:2),
+                                    Description = HandleGetString(reader, colIdx:2),
                                     Category = reader.GetString(3),
                                     IsComplete = reader.GetBoolean(4),
                                     CreationDate = reader.GetDateTime(5),
-                                    CompletionDate = HanldeGetDateTime(reader, colIdx: 6),
+                                    CompletionDate = HandleGetDateTime(reader, colIdx: 6),
                                     FuneralId = reader.GetGuid(7),
                                     IsDeleted = reader.GetBoolean(8)
                                 };
@@ -82,12 +84,14 @@ namespace DataLibrary.ServiceLayer.TaskService
             var tasks = new List<NsTask>();
             try
             {
+                // Get the database connection string from Azure Key Vault and establish connection
                 using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
                     await conn.OpenAsync();
 
                     using (SqlCommand cmd = new SqlCommand("SELECT * FROM Tasks WHERE FuneralId = @Funeral AND Category = @Category AND IsDeleted = 0", conn))
                     {
+                        // Add the parameters values to the query
                         cmd.Parameters.AddWithValue("@Funeral", funeral);
                         cmd.Parameters.AddWithValue("@Category", category);
 
@@ -99,11 +103,11 @@ namespace DataLibrary.ServiceLayer.TaskService
                                 {
                                     TaskId = reader.GetGuid(reader.GetOrdinal("TaskId")),
                                     TaskNumber = reader.GetString(reader.GetOrdinal("TaskNumber")),
-                                    Description = HanldeGetString(reader, "Description"),
+                                    Description = HandleGetString(reader, "Description"),
                                     Category = reader.GetString(reader.GetOrdinal("Category")),
                                     IsComplete = reader.GetBoolean(reader.GetOrdinal("IsComplete")),
                                     CreationDate = reader.GetDateTime(reader.GetOrdinal("CreationDate")),
-                                    CompletionDate = HanldeGetDateTime(reader, "CompletionDate"),
+                                    CompletionDate = HandleGetDateTime(reader, "CompletionDate"),
                                     FuneralId = reader.GetGuid(reader.GetOrdinal("FuneralId"))
                                 };
                                 tasks.Add(task);
@@ -131,6 +135,7 @@ namespace DataLibrary.ServiceLayer.TaskService
             var taskCounts = (0, 0);
             try
             {
+                // Get the database connection string from Azure Key Vault and establish connection
                 using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
                     await conn.OpenAsync();
@@ -140,13 +145,16 @@ namespace DataLibrary.ServiceLayer.TaskService
                             "SELECT COUNT( CASE WHEN FuneralId = @FuneralId AND IsDeleted = 0 AND IsComplete = 1 THEN 1 END ) AS complete_tasks, COUNT( CASE WHEN FuneralId = @FuneralId AND IsDeleted = 0 THEN 1 END ) AS total_tasks FROM Tasks;", 
                             conn))
                     {
+                        // Add the parameters values to the query
                         cmd.Parameters.AddWithValue("@FuneralId", funeral);
 
                         using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
                         {
                             while (await reader.ReadAsync())
                             {
+                                // Get the count of completed tasks
                                 taskCounts.Item1 = reader.GetInt32(0);
+                                // Get the count of total tasks
                                 taskCounts.Item2 = reader.GetInt32(1);
                             }
                         }
@@ -171,9 +179,10 @@ namespace DataLibrary.ServiceLayer.TaskService
         {
             try
             {
+                // Get the database connection string from Azure Key Vault and establish connection
                 using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
-                    conn.Open();
+                    await conn.OpenAsync();
 
                     SqlCommand cmd = new SqlCommand();
 
@@ -182,6 +191,7 @@ namespace DataLibrary.ServiceLayer.TaskService
                     else
                         cmd = new SqlCommand("INSERT INTO Tasks (TaskId, TaskNumber, Description, Category, IsComplete, CreationDate, CompletionDate, FuneralId, IsDeleted) VALUES (@TaskId, @TaskNumber, @Description, @Category, @IsComplete, @CreationDate, @CompletionDate, @FuneralId, 0)", conn);
 
+                    // Add the parameters values to the query
                     cmd.Parameters.AddWithValue("@TaskId", task.TaskId);
                     cmd.Parameters.AddWithValue("@TaskNumber", task.TaskNumber);
                     cmd.Parameters.AddWithValue("@Description", task.Description);
@@ -192,9 +202,8 @@ namespace DataLibrary.ServiceLayer.TaskService
                         cmd.Parameters.AddWithValue("@CompletionDate", task.CompletionDate);
                     cmd.Parameters.AddWithValue("@FuneralId", task.FuneralId);
 
-                    int rowsInserted = cmd.ExecuteNonQuery();
-
-                    if (rowsInserted > 0)
+                    // Execute the query and check if a row was affected
+                    if (await cmd.ExecuteNonQueryAsync() > 0)
                         return task;
                     else
                         return null;
@@ -218,9 +227,10 @@ namespace DataLibrary.ServiceLayer.TaskService
         {
             try
             {
+                // Get the database connection string from Azure Key Vault and establish connection
                 using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
-                    conn.Open();
+                    await conn.OpenAsync();
 
                     string cmdString = "UPDATE Tasks SET Description = @Description, IsComplete = @IsComplete";
 
@@ -231,15 +241,15 @@ namespace DataLibrary.ServiceLayer.TaskService
 
                     SqlCommand cmd = new SqlCommand(cmdString, conn);
 
+                    // Add the parameters values to the query
                     cmd.Parameters.AddWithValue("@Description", task.Description);
                     cmd.Parameters.AddWithValue("@IsComplete", task.IsComplete);
                     if (task.CompletionDate is not null)
                         cmd.Parameters.AddWithValue("@CompletionDate", task.CompletionDate);
                     cmd.Parameters.AddWithValue("@TaskId", task.TaskId);
 
-                    int rowsInserted = cmd.ExecuteNonQuery();
-
-                    if (rowsInserted > 0)
+                    // Execute the query and check if a row was affected
+                    if (await cmd.ExecuteNonQueryAsync() > 0)
                         return task;
                     else
                         return null;
@@ -262,15 +272,18 @@ namespace DataLibrary.ServiceLayer.TaskService
         {
             try
             {
+                // Get the database connection string from Azure Key Vault and establish connection
                 using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
-                    conn.Open();
+                    await conn.OpenAsync();
                     SqlCommand cmd = new SqlCommand(
                         "UPDATE Tasks SET IsDeleted = 1 WHERE TaskId = @TaskId", conn);
 
+                    // Add the parameters values to the query
                     cmd.Parameters.AddWithValue("@TaskId", taskId);
 
-                    if (cmd.ExecuteNonQuery() > 0)
+                    // Execute the query and check if a row was affected
+                    if (await cmd.ExecuteNonQueryAsync() > 0)
                         return true;
                     else
                         return false;
@@ -288,34 +301,42 @@ namespace DataLibrary.ServiceLayer.TaskService
         }
 
 
+        #region [NULL HANDLING]
         // Generic Helper methods for null value handling
-        public string? HanldeGetString(SqlDataReader reader, string? columnName = null, int colIdx = 0)
+
+        // Helper method for reading nullable string columns
+        public string? HandleGetString(SqlDataReader reader, string? columnName = null, int colIdx = 0)
         {
             int column = 0;
 
+            // if the column name was passed, use it to get the column index
             if (columnName != null)
                 column = reader.GetOrdinal(columnName);
             else
                 column = colIdx;
 
+            // Check if the column value is null
             if (!reader.IsDBNull(column))
                 return reader.GetString(column);
             return null;
         }
 
-        public DateTime? HanldeGetDateTime(SqlDataReader reader, string? columnName = null, int colIdx = 0)
+        // Helper method for reading nullable DateTime columns
+        public DateTime? HandleGetDateTime(SqlDataReader reader, string? columnName = null, int colIdx = 0)
         {
             int column = 0;
 
+            // if the column name was passed, use it to get the column index
             if (columnName != null)
                 column = reader.GetOrdinal(columnName);
             else
                 column = colIdx;
 
+            // Check if the column value is null
             if (!reader.IsDBNull(column))
                 return reader.GetDateTime(column);
             return null;
         }
-
+        #endregion
     }
 }

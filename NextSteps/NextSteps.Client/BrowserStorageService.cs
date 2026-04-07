@@ -23,20 +23,20 @@ namespace NextSteps.Client
         }
 
         // Store something in local storage, identifiable by a key
-        public async Task SetAsync<T>(string key, T value)
+        public async Task SetInStorage<T>(string key, T value)
         {
             await _js.InvokeVoidAsync("localStorage.setItem", key, JsonSerializer.Serialize(value));
         }
 
         // Get something from local storage by its key
-        public async Task<T?> GetAsync<T>(string key)
+        public async Task<T?> GetFromStorage<T>(string key)
         {
             var json = await _js.InvokeAsync<string>("localStorage.getItem", key);
             return json == null ? default : JsonSerializer.Deserialize<T>(json);
         }
 
         // Remove something from local storage by its key
-        public async Task RemoveAsync(string key)
+        public async Task RemoveFromStorage(string key)
         {
             await _js.InvokeVoidAsync("localStorage.removeItem", key);
         }

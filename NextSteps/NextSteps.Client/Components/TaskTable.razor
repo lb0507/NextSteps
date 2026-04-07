@@ -68,7 +68,15 @@
 
     </div>
 
-    <Button Color="ButtonColor.Primary" Type="ButtonType.Link" To=@($"/add-task/{Category}")>Add Task</Button>
+    <div class="buttons">
+
+        <!-- Add a New Task -->
+        <Button Color="ButtonColor.Primary" Type="ButtonType.Link" To=@($"/add-task/{Category}")>Add Task</Button>
+
+        <!-- Refresh the Grid -->
+        <Button Color="ButtonColor.Secondary" @onclick="@(async () => { if (grid is not null) await grid.RefreshDataAsync(); StateHasChanged(); })">Refresh</Button>
+
+    </div>
 
 </div>
 
@@ -116,7 +124,7 @@
         Tasks = await _task.GetTasksByCategory(FuneralId, Category);
 
         // A short pause to ensure the task data loads before the grid is refreshed
-        await Task.Delay(300);
+        await Task.Delay(400);
 
         // Refresh the grid
         if (grid is not null)

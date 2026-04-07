@@ -1,10 +1,10 @@
 ﻿@*
-    Clergy Page
-    4/5/2026
+    Post-Service Page
+    4/6/2026
     ======================================
     - Initial page creation
     ======================================
-    Category page for Clergy Tasks
+    Category page for Post-Service Tasks
 *@
 
 @using BlazorBootstrap
@@ -26,7 +26,7 @@
 <!-- Override MainLayout from Server and use Client's Custom Layout-->
 @layout CustomLayout
 
-@page "/Clergy"
+@page "/Post-Service"
 
 <!-- Screen Message Modal -->
 <ScreenModal @ref="modal" TitleText="@modalTitle" BodyText="@modalBody" URL="@modalURL" />
@@ -34,7 +34,7 @@
 
 <div class="page-container">
 
-    <h3>Clergy</h3>
+    <h3>Post-Service</h3>
 
     <!-- Back button to return to category selection/funeral landing page -->
     <Button Type="ButtonType.Link" To="/funeral">Back to Category Selection</Button>
@@ -47,7 +47,7 @@
                 <Content>
 
                     <TaskTable FuneralId="@currentFuneral.FuneralId"
-                               Category="Clergy" />
+                               Category="Post-Service" />
                     
                 </Content>
             </Tab>
@@ -76,7 +76,8 @@
     {
         if (firstRender)
         {
-            currentUser = await _storage.GetAsync<User>("currentUser") ?? new();
+            // Get the current user from browser storage
+            currentUser = await _storage.GetFromStorage<User>("currentUser") ?? new();
 
             // Check if the user is signed in. If not, navigate them to the Sign In page
             if (currentUser is null)
@@ -86,7 +87,7 @@
             else
             {
                 // Get the selected Funeral from browser storage
-                currentFuneral = await _storage.GetAsync<Funeral>("currentFuneral") ?? new();
+                currentFuneral = await _storage.GetFromStorage<Funeral>("currentFuneral") ?? new();
             }
         }
         StateHasChanged();

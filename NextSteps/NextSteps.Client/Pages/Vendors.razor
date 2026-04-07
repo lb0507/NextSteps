@@ -103,7 +103,8 @@
     {
         if (firstRender)
         {
-            currentUser = await _storage.GetAsync<User>("currentUser") ?? new();
+            // Get the current user from browser storage
+            currentUser = await _storage.GetFromStorage<User>("currentUser") ?? new();
 
             // Check if the user is signed in. If not, navigate them to the Sign In page
             if (currentUser is null)
@@ -113,7 +114,7 @@
             else
             {
                 // Get the selected Funeral from browser storage
-                currentFuneral = await _storage.GetAsync<Funeral>("currentFuneral") ?? new();
+                currentFuneral = await _storage.GetFromStorage<Funeral>("currentFuneral") ?? new();
             }
 
             if (Category is not null)

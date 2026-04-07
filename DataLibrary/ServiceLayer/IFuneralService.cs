@@ -33,9 +33,9 @@ namespace DataLibrary.ServiceLayer.FuneralService
         Task<bool> DeleteFuneral(Guid funeralId);
 
         // Helper method for reading nullable string columns
-        string? HanldeGetString(SqlDataReader reader, string columnName);
+        string? HandleGetString(SqlDataReader reader, string columnName);
 
         // Helper method for reading nullable DateTime columns
-        DateTime? HanldeGetDateTime(SqlDataReader reader, string columnName);
+        DateTime? HandleGetDateTime(SqlDataReader reader, string columnName);
     }
 }

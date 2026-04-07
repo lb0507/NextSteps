@@ -1,5 +1,5 @@
 ﻿/* 
-*    INoteService.cs
+*    NoteService.cs
 *    3/21/2026
 *    ======================================
 *    - Initial creation
@@ -32,12 +32,14 @@ namespace DataLibrary.ServiceLayer.NoteService
             var notes = new List<Note>();
             try
             {
+                // Get the database connection string from Azure Key Vault and establish connection
                 using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
                     await conn.OpenAsync();
 
                     using (SqlCommand cmd = new SqlCommand("SELECT * FROM Notes WHERE ObjectId = @ObjectId AND IsDeleted = 0", conn))
                     {
+                        // Add the parameters values to the query
                         cmd.Parameters.AddWithValue("@ObjectId", objectId);
 
                         using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
@@ -71,29 +73,28 @@ namespace DataLibrary.ServiceLayer.NoteService
         }
 
 
-
         // Create and attach a new note to an Object
         public async Task<Note?> CreateNote(Note note)
         {
             try
             {
+                // Get the database connection string from Azure Key Vault and establish connection
                 using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
-                    conn.Open();
+                    await conn.OpenAsync();
                     SqlCommand cmd = new SqlCommand(
                         "INSERT INTO Notes (NoteId, NoteText, CreationDate, ObjectId, IsDeleted) VALUES (@NoteId, @NoteText, @CreationDate, @ObjectId, @IsDeleted)", conn);
 
+                    // Add the parameters values to the query
                     cmd.Parameters.AddWithValue("@NoteId", note.NoteId);
                     cmd.Parameters.AddWithValue("@NoteText", note.NoteText);
                     cmd.Parameters.AddWithValue("@CreationDate", note.CreationDate);
                     cmd.Parameters.AddWithValue("@ObjectId", note.ObjectId);
                     cmd.Parameters.AddWithValue("@IsDeleted", note.IsDeleted);
-                    int rowsInserted = cmd.ExecuteNonQuery();
 
-                    if (rowsInserted > 0)
-                    {
+                    // Execute the query and check if a row was affected
+                    if (await cmd.ExecuteNonQueryAsync() > 0)
                         return note;
-                    }
                     else
                         return null;
                 }
@@ -116,15 +117,18 @@ namespace DataLibrary.ServiceLayer.NoteService
         {
             try
             {
+                // Get the database connection string from Azure Key Vault and establish connection
                 using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
-                    conn.Open();
+                    await conn.OpenAsync();
                     SqlCommand cmd = new SqlCommand(
                         "UPDATE Notes SET IsDeleted = 1 WHERE NoteId = @NoteId", conn);
 
+                    // Add the parameters values to the query
                     cmd.Parameters.AddWithValue("@NoteId", noteId);
 
-                    if (cmd.ExecuteNonQuery() > 0)
+                    // Execute the query and check if a row was affected
+                    if (await cmd.ExecuteNonQueryAsync() > 0)
                         return true;
                     else
                         return false;

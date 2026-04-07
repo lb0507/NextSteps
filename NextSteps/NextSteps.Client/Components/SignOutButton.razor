@@ -20,10 +20,10 @@
     private async Task HandleSignOut()
     {
         // Remove the signed in User from browser storage
-        await _storage.RemoveAsync("currentUser");
+        await _storage.RemoveFromStorage("currentUser");
 
         // Remove the selected Funeral from browser storage
-        await _storage.RemoveAsync("currentFuneral");
+        await _storage.RemoveFromStorage("currentFuneral");
 
         // Navigate the user to the Sign In page
         _nav.NavigateTo("/");

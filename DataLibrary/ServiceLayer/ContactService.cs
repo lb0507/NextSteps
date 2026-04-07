@@ -10,10 +10,8 @@
 */
 
 using DataLibrary.Models;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
 
 namespace DataLibrary.ServiceLayer.ContactService
 {
@@ -33,12 +31,14 @@ namespace DataLibrary.ServiceLayer.ContactService
             var contacts = new List<Contact>();
             try
             {
+                // Get the database connection string from Azure Key Vault and establish connection
                 using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
                     await conn.OpenAsync();
 
                     using (SqlCommand cmd = new SqlCommand("SELECT * FROM Contacts WHERE ContactId = @ContactId", conn))
                     {
+                        // Add the parameters values to the query
                         cmd.Parameters.AddWithValue("@ContactId", contactId);
 
                         using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
@@ -50,13 +50,13 @@ namespace DataLibrary.ServiceLayer.ContactService
                                     ContactId = reader.GetGuid(reader.GetOrdinal("ContactId")),
                                     ContactName = reader.GetString(reader.GetOrdinal("ContactName")),
                                     ContactType = reader.GetString(reader.GetOrdinal("ContactType")),
-                                    ContactEmail = HanldeGetString(reader, "ContactEmail"),
-                                    ContactPhone = HanldeGetString(reader, "ContactPhone"),
-                                    Location = HanldeGetString(reader, "Location"),
-                                    VendorType = HanldeGetString(reader, "VendorType"),
+                                    ContactEmail = HandleGetString(reader, "ContactEmail"),
+                                    ContactPhone = HandleGetString(reader, "ContactPhone"),
+                                    Location = HandleGetString(reader, "Location"),
+                                    VendorType = HandleGetString(reader, "VendorType"),
                                     UserId = reader.GetGuid(reader.GetOrdinal("UserId")),
                                     IsGlobal = reader.GetBoolean(reader.GetOrdinal("IsGlobal")),
-                                    FuneralId = HanldeGetGuid(reader, "FuneralId"),
+                                    FuneralId = HandleGetGuid(reader, "FuneralId"),
                                     IsDeleted = reader.GetBoolean(reader.GetOrdinal("IsDeleted"))
                                 };
                                 contacts.Add(contact);
@@ -87,12 +87,14 @@ namespace DataLibrary.ServiceLayer.ContactService
             var contacts = new List<Contact>();
             try
             {
+                // Get the database connection string from Azure Key Vault and establish connection
                 using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
                     await conn.OpenAsync();
 
                     using (SqlCommand cmd = new SqlCommand("SELECT * FROM Contacts WHERE UserId = @UserId AND IsDeleted = 0 AND (IsGlobal = 1 OR FuneralId = @FuneralId)", conn))
                     {
+                        // Add the parameters values to the query
                         cmd.Parameters.AddWithValue("@UserId", userId);
                         cmd.Parameters.AddWithValue("@FuneralId", funeralId);
 
@@ -105,13 +107,13 @@ namespace DataLibrary.ServiceLayer.ContactService
                                     ContactId = reader.GetGuid(reader.GetOrdinal("ContactId")),
                                     ContactName = reader.GetString(reader.GetOrdinal("ContactName")),
                                     ContactType = reader.GetString(reader.GetOrdinal("ContactType")),
-                                    ContactEmail = HanldeGetString(reader, "ContactEmail"),
-                                    ContactPhone = HanldeGetString(reader, "ContactPhone"),
-                                    Location = HanldeGetString(reader, "Location"),
-                                    VendorType = HanldeGetString(reader, "VendorType"),
+                                    ContactEmail = HandleGetString(reader, "ContactEmail"),
+                                    ContactPhone = HandleGetString(reader, "ContactPhone"),
+                                    Location = HandleGetString(reader, "Location"),
+                                    VendorType = HandleGetString(reader, "VendorType"),
                                     UserId = reader.GetGuid(reader.GetOrdinal("UserId")),
                                     IsGlobal = reader.GetBoolean(reader.GetOrdinal("IsGlobal")),
-                                    FuneralId = HanldeGetGuid(reader, "FuneralId"),
+                                    FuneralId = HandleGetGuid(reader, "FuneralId"),
                                     IsDeleted = reader.GetBoolean(reader.GetOrdinal("IsDeleted"))
                                 };
                                 contacts.Add(contact);
@@ -139,12 +141,14 @@ namespace DataLibrary.ServiceLayer.ContactService
             var contacts = new List<Contact>();
             try
             {
+                // Get the database connection string from Azure Key Vault and establish connection
                 using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
                     await conn.OpenAsync();
 
                     using (SqlCommand cmd = new SqlCommand("SELECT * FROM Contacts WHERE UserId = @UserId AND IsDeleted = 0 AND ContactType = 'Vendor' AND (IsGlobal = 1 OR FuneralId = @FuneralId)", conn))
                     {
+                        // Add the parameters values to the query
                         cmd.Parameters.AddWithValue("@UserId", userId);
                         cmd.Parameters.AddWithValue("@FuneralId", funeralId);
 
@@ -157,13 +161,13 @@ namespace DataLibrary.ServiceLayer.ContactService
                                     ContactId = reader.GetGuid(reader.GetOrdinal("ContactId")),
                                     ContactName = reader.GetString(reader.GetOrdinal("ContactName")),
                                     ContactType = reader.GetString(reader.GetOrdinal("ContactType")),
-                                    ContactEmail = HanldeGetString(reader, "ContactEmail"),
-                                    ContactPhone = HanldeGetString(reader, "ContactPhone"),
-                                    Location = HanldeGetString(reader, "Location"),
-                                    VendorType = HanldeGetString(reader, "VendorType"),
+                                    ContactEmail = HandleGetString(reader, "ContactEmail"),
+                                    ContactPhone = HandleGetString(reader, "ContactPhone"),
+                                    Location = HandleGetString(reader, "Location"),
+                                    VendorType = HandleGetString(reader, "VendorType"),
                                     UserId = reader.GetGuid(reader.GetOrdinal("UserId")),
                                     IsGlobal = reader.GetBoolean(reader.GetOrdinal("IsGlobal")),
-                                    FuneralId = HanldeGetGuid(reader, "FuneralId"),
+                                    FuneralId = HandleGetGuid(reader, "FuneralId"),
                                     IsDeleted = reader.GetBoolean(reader.GetOrdinal("IsDeleted"))
                                 };
                                 contacts.Add(contact);
@@ -190,14 +194,15 @@ namespace DataLibrary.ServiceLayer.ContactService
         {
             try
             {
+                // Get the database connection string from Azure Key Vault and establish connection
                 using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
-                    
-                    conn.Open();
+                    await conn.OpenAsync();
                     SqlCommand cmd = new SqlCommand(
                         "INSERT INTO Contacts (ContactId, ContactName, ContactType, ContactEmail, ContactPhone, Location, VendorType, UserId, IsGlobal, FuneralId, IsDeleted) " +
                         "VALUES (@ContactId, @ContactName, @ContactType, @ContactEmail, @ContactPhone, @Location, @VendorType, @UserId, @IsGlobal, @FuneralId, @IsDeleted)", conn);
 
+                    // Add the parameters values to the query
                     cmd.Parameters.AddWithValue("@ContactId", contact.ContactId);
                     cmd.Parameters.AddWithValue("@ContactName", contact.ContactName);
                     cmd.Parameters.AddWithValue("@ContactType", contact.ContactType);
@@ -210,12 +215,9 @@ namespace DataLibrary.ServiceLayer.ContactService
                     cmd.Parameters.AddWithValue("@FuneralId", (contact.FuneralId is null) ? DBNull.Value : contact.FuneralId);
                     cmd.Parameters.AddWithValue("@IsDeleted", contact.IsDeleted);
 
-                    int rowsInserted = cmd.ExecuteNonQuery();
-
-                    if (rowsInserted > 0)
-                    {
+                    // Execute the query and check if a row was affected
+                    if (await cmd.ExecuteNonQueryAsync() > 0)
                         return contact;
-                    }
                     else
                         return null;
                 }
@@ -238,14 +240,15 @@ namespace DataLibrary.ServiceLayer.ContactService
         {
             try
             {
+                // Get the database connection string from Azure Key Vault and establish connection
                 using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
-
-                    conn.Open();
+                    await conn.OpenAsync();
                     SqlCommand cmd = new SqlCommand(
                         "UPDATE Contacts SET ContactName = @ContactName, ContactType = @ContactType, ContactEmail = @ContactEmail, ContactPhone = @ContactPhone, " +
                         "Location = @Location, VendorType = @VendorType, IsGlobal = @IsGlobal, FuneralId = @FuneralId WHERE ContactId = @ContactId", conn);
 
+                    // Add the parameters values to the query
                     cmd.Parameters.AddWithValue("@ContactName", contact.ContactName);
                     cmd.Parameters.AddWithValue("@ContactType", contact.ContactType);
                     cmd.Parameters.AddWithValue("@ContactEmail", string.IsNullOrEmpty(contact.ContactEmail) ? DBNull.Value : contact.ContactEmail);
@@ -256,12 +259,9 @@ namespace DataLibrary.ServiceLayer.ContactService
                     cmd.Parameters.AddWithValue("@FuneralId", (contact.FuneralId is null) ? DBNull.Value : contact.FuneralId);
                     cmd.Parameters.AddWithValue("@ContactId", contact.ContactId);
 
-                    int rowsInserted = cmd.ExecuteNonQuery();
-
-                    if (rowsInserted > 0)
-                    {
+                    // Execute the query and check if a row was affected
+                    if (await cmd.ExecuteNonQueryAsync() > 0)
                         return contact;
-                    }
                     else
                         return null;
                 }
@@ -284,15 +284,18 @@ namespace DataLibrary.ServiceLayer.ContactService
         {
             try
             {
+                // Get the database connection string from Azure Key Vault and establish connection
                 using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
-                    conn.Open();
+                    await conn.OpenAsync();
                     SqlCommand cmd = new SqlCommand(
                         "UPDATE Contacts SET IsDeleted = 1 WHERE ContactId = @ContactId", conn);
 
+                    // Add the parameters values to the query
                     cmd.Parameters.AddWithValue("@ContactId", contactId);
 
-                    if (cmd.ExecuteNonQuery() > 0)
+                    // Execute the query and check if a row was affected
+                    if (await cmd.ExecuteNonQueryAsync() > 0)
                         return true;
                     else
                         return false;
@@ -313,7 +316,7 @@ namespace DataLibrary.ServiceLayer.ContactService
         // Generic Helper methods for null value handline
 
         // Handle reading null strings from database
-        public string? HanldeGetString(SqlDataReader reader, string columnName)
+        public string? HandleGetString(SqlDataReader reader, string columnName)
         {
             if (!reader.IsDBNull(reader.GetOrdinal(columnName)))
                 return reader.GetString(reader.GetOrdinal(columnName));
@@ -321,7 +324,7 @@ namespace DataLibrary.ServiceLayer.ContactService
         }
 
         // Handle reading null datetimes from database
-        public DateTime? HanldeGetDateTime(SqlDataReader reader, string columnName)
+        public DateTime? HandleGetDateTime(SqlDataReader reader, string columnName)
         {
             if (!reader.IsDBNull(reader.GetOrdinal(columnName)))
                 return reader.GetDateTime(reader.GetOrdinal(columnName));
@@ -329,7 +332,7 @@ namespace DataLibrary.ServiceLayer.ContactService
         }
 
         // Handle reading null guids from database
-        public Guid? HanldeGetGuid(SqlDataReader reader, string columnName)
+        public Guid? HandleGetGuid(SqlDataReader reader, string columnName)
         {
             if (!reader.IsDBNull(reader.GetOrdinal(columnName)))
                 return reader.GetGuid(reader.GetOrdinal(columnName));

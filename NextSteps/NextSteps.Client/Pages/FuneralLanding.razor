@@ -41,19 +41,30 @@
 
     <!-- Progress Bar for Showing Percentage of Task Completion -->
     <Progress Class="mb-3">
-        <ProgressBar Width="@(taskProgress)" Label="@($"{(int)taskProgress}%")" Type="ProgressType.StripedAndAnimated" />
+        <ProgressBar Width="@(taskProgress)" Label="@($"{(int)taskProgress}%")" Type="ProgressType.StripedAndAnimated"/>
     </Progress>
 
     <!-- Category Selection Icon Grid -->
     <div class="table-container">
         <table class="icon-grid">
             <tr>
+
                 <td>
                     <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" Class="mb-4" Style="width:18rem;" @onclick="@(() => _nav.NavigateTo("/General Info"))">
                         <CardBody>
                             <Icon Name="IconName.InfoCircleFill" Size="IconSize.x1" Color="IconColor.Light" />
                             <br>
                             <Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/General Info">General Info</Button>
+                        </CardBody>
+                    </Card>
+                </td>
+
+                <td>
+                    <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" Class="mb-4" Style="width:18rem;" @onclick="@(() => _nav.NavigateTo("/Schedule"))">
+                        <CardBody>
+                            <Icon Name="IconName.Box" Size="IconSize.x1" Color="IconColor.Light" />
+                            <br>
+                            <Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/Schedule">Schedule</Button>
                         </CardBody>
                     </Card>
                 </td>
@@ -67,7 +78,20 @@
                         </CardBody>
                     </Card>
                 </td>
-
+                
+            </tr>
+            <tr>
+                
+                <td>
+                    <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" Class="mb-4" Style="width:18rem;" @onclick="@(() => _nav.NavigateTo("/Venue"))">
+                        <CardBody>
+                            <Icon Name="IconName.Box" Size="IconSize.x1" Color="IconColor.Light" />
+                            <br>
+                            <Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/Venue">Venue</Button>
+                        </CardBody>
+                    </Card>
+                </td>
+                
                 <td>
                     <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" Class="mb-4" Style="width:18rem;" @onclick="@(() => _nav.NavigateTo("/Body Preparation"))">
                         <CardBody>
@@ -77,39 +101,20 @@
                         </CardBody>
                     </Card>
                 </td>
+
+                <td>
+                    <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" Class="mb-4" Style="width:18rem;" @onclick="@(() => _nav.NavigateTo("/Post-Service"))">
+                        <CardBody>
+                            <Icon Name="IconName.Box" Size="IconSize.x1" Color="IconColor.Light" />
+                            <br>
+                            <Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/Post-Service">Post-Service</Button>
+                        </CardBody>
+                    </Card>
+                </td>
+
             </tr>
             <tr>
-                <td>
-                    <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" Class="mb-4" Style="width:18rem;" @onclick="@(() => _nav.NavigateTo("/Clergy"))">
-                        <CardBody>
-                            <Icon Name="IconName.Box" Size="IconSize.x1" Color="IconColor.Light" />
-                            <br>
-                            <Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/Clergy">Clergy</Button>
-                        </CardBody>
-                    </Card>
-                </td>
-                
-                <td>
-                    <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" Class="mb-4" Style="width:18rem;" @onclick="@(() => _nav.NavigateTo("/"))">
-                        <CardBody>
-                            <Icon Name="IconName.Box" Size="IconSize.x1" Color="IconColor.Light" />
-                            <br>
-                            <Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/client-info">Category</Button>
-                        </CardBody>
-                    </Card>
-                </td>
-                
-                <td>
-                    <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" Class="mb-4" Style="width:18rem;" @onclick="@(() => _nav.NavigateTo("/"))">
-                        <CardBody>
-                            <Icon Name="IconName.Box" Size="IconSize.x1" Color="IconColor.Light" />
-                            <br>
-                            <Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/client-info">Category</Button>
-                        </CardBody>
-                    </Card>
-                </td>
-            </tr>
-            <tr>
+
                 <td>
                     <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" Class="mb-4" Style="width:18rem;" @onclick="@(() => _nav.NavigateTo("/contactbook"))">
                         <CardBody>
@@ -120,25 +125,16 @@
                     </Card>
                 </td>
                 
-                   <td>
-                    <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" Class="mb-4" Style="width:18rem;" @onclick="@(() => _nav.NavigateTo("/"))">
+                <td>
+                    <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" Class="mb-4" Style="width:18rem;" @onclick="@(() => _nav.NavigateTo("/Document Library"))">
                         <CardBody>
                             <Icon Name="IconName.Box" Size="IconSize.x1" Color="IconColor.Light" />
                             <br>
-                            <Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/map-search">Category</Button>
+                            <Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/library">Document Library</Button>
                         </CardBody>
                     </Card>
                 </td>
 
-                <td>
-                    <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" Class="mb-4" Style="width:18rem;" @onclick="@(() => _nav.NavigateTo("/"))">
-                        <CardBody>
-                            <Icon Name="IconName.Box" Size="IconSize.x1" Color="IconColor.Light" />
-                            <br>
-                            <Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/client-info">Category</Button>
-                        </CardBody>
-                    </Card>
-                </td>
             </tr>
         </table>
     </div>
@@ -158,7 +154,8 @@
     {
         if (firstRender)
         {
-            currentUser = await _storage.GetAsync<User>("currentUser") ?? new();
+            // Get the current user from browser storage
+            currentUser = await _storage.GetFromStorage<User>("currentUser") ?? new();
 
             // Check if the user is signed in. If not, navigate them to the Sign In page
             if (currentUser is null)
@@ -168,7 +165,7 @@
             else
             {
                 // Get the currently accessed funeral from browser storage
-                currentFuneral = await _storage.GetAsync<Funeral>("currentFuneral") ?? new();
+                currentFuneral = await _storage.GetFromStorage<Funeral>("currentFuneral") ?? new();
 
                 // Get the count of completed tasks and all tasks for the funeral
                 var taskCounts = await _tasks.GetCountOfTasksByFuneral(currentFuneral.FuneralId);

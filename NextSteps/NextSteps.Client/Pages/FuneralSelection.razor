@@ -49,7 +49,7 @@
 </Modal>
 
 <!-- Screen Message Modal for Funeral creation errors -->
-<ScreenModal @ref="errorModal" TitleText="Error" BodyText="An error occurred during creation of the Funeral. Please validate your input and try again." />
+<ScreenModal @ref="resultModal" TitleText="@modalTitle" BodyText="@modalBody" URL="@modalURL" />
 
 <div class="page-container">
 
@@ -62,7 +62,6 @@
           AllowFiltering="true"
           AllowPaging="true"
           AllowSorting="true"
-          AllowSelection="true"
           AllowDetailView="true"
           AllowRowClick="true"
           OnRowDoubleClick="OnRowDoubleClick"
@@ -70,8 +69,6 @@
           DataProvider="FuneralsDataProvider"
           PageSize="10"
           Responsive="true"
-          RowKeySelector="(funeral) => funeral.FuneralId"
-          SelectedItemsChanged="OnSelectedItemsChanged"
           SelectionMode="GridSelectionMode.Multiple">
 
         <GridColumns>
@@ -94,7 +91,11 @@
 
     </Grid>
 
+    <!-- Add a New Funeral -->
     <Button Color="ButtonColor.Primary" @onclick="OnShowModalClick">Add Funeral</Button>
+
+    <!-- Refresh the Grid -->
+    <Button Color="ButtonColor.Secondary" @onclick="@(async () => { if (grid is not null) await grid.RefreshDataAsync(); StateHasChanged(); })">Refresh</Button>
 
 </div>
 
@@ -106,8 +107,14 @@
 
     private User currentUser = new();
 
-    private ScreenModal errorModal = default!;
+    #region[MODAL]
+    private ScreenModal resultModal = default!;
     private Modal modal = default!;
+    private string modalTitle = string.Empty;
+    private string modalBody = string.Empty;
+    private string modalURL = string.Empty;
+    #endregion
+
     private string name = "";
 
     #region [GRID]
@@ -126,7 +133,7 @@
 
     private async Task OnRowDoubleClick(GridRowEventArgs<Funeral> args)
     {
-        await _storage.SetAsync("currentFuneral", args.Item);
+        await _storage.SetInStorage("currentFuneral", args.Item);
 
         _nav.NavigateTo("/funeral");
     }
@@ -139,7 +146,8 @@
         {
             PreloadService.Show(SpinnerColor.Dark);
 
-            currentUser = await _storage.GetAsync<User>("currentUser") ?? new();
+            // Get the current user from browser storage
+            currentUser = await _storage.GetFromStorage<User>("currentUser") ?? new();
 
             // Check if the user is signed in. If not, navigate them to the Sign In page
             if (currentUser is null)
@@ -149,12 +157,12 @@
             else
             {
                 // Clear the selected Funeral
-                await _storage.RemoveAsync("currentFuneral");
+                await _storage.RemoveFromStorage("currentFuneral");
 
                 Funerals = await _funeral.GetFunerals(currentUser?.UserId ?? Guid.Empty);
 
                 // A short pause to ensure the funeral data loads before the grid is refreshed
-                await Task.Delay(300);
+                await Task.Delay(400);
 
                 // Refresh the grid
                 if(grid is not null)
@@ -168,7 +176,6 @@
 
     private async Task HandleFuneralCreate()
     {
-        Console.WriteLine($"currentUser.UserId: {currentUser.UserId}");
         var result = await _funeral.CreateFuneral
         (
             new Funeral
@@ -186,11 +193,18 @@
             if (grid is not null)
                 await grid.RefreshDataAsync();
             await OnHideModalClick();
+
+            modalTitle = "Success";
+            modalBody = "To modify or delete the funeral, go to the \"Info\" tab of the \"General Info\" category.";
+            await resultModal.OnShowModalClick();
         }
         else
         {
             await OnHideModalClick();
-            await errorModal.OnShowModalClick();
+
+            modalTitle = "Error";
+            modalBody = "An error occurred during creation of the Funeral. Please validate your input and try again.";
+            await resultModal.OnShowModalClick();
         }   
     }
 

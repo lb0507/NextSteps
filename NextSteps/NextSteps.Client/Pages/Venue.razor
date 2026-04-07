@@ -1,10 +1,10 @@
 ﻿@*
-    Body Preparation Page
-    4/5/2026
+    Venue Page
+    4/6/2026
     ======================================
     - Initial page creation
     ======================================
-    Category page for Body Preparation Tasks
+    Category page for Venue Tasks
 *@
 
 @using BlazorBootstrap
@@ -26,7 +26,7 @@
 <!-- Override MainLayout from Server and use Client's Custom Layout-->
 @layout CustomLayout
 
-@page "/Body Preparation"
+@page "/Venue"
 
 <!-- Screen Message Modal -->
 <ScreenModal @ref="modal" TitleText="@modalTitle" BodyText="@modalBody" URL="@modalURL" />
@@ -34,7 +34,7 @@
 
 <div class="page-container">
 
-    <h3>Body Preparation</h3>
+    <h3>Venue</h3>
 
     <!-- Back button to return to category selection/funeral landing page -->
     <Button Type="ButtonType.Link" To="/funeral">Back to Category Selection</Button>
@@ -47,7 +47,7 @@
                 <Content>
 
                     <TaskTable FuneralId="@currentFuneral.FuneralId"
-                               Category="Body Preparation" />
+                               Category="Venue" />
                     
                 </Content>
             </Tab>

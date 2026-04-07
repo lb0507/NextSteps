@@ -34,9 +34,9 @@ namespace DataLibrary.ServiceLayer.ContactService
         Task<bool> DeleteContact(Guid contactId);
 
         // Helper method for reading nullable string columns
-        string? HanldeGetString(SqlDataReader reader, string columnName);
+        string? HandleGetString(SqlDataReader reader, string columnName);
 
         // Helper method for reading nullable DateTime columns
-        DateTime? HanldeGetDateTime(SqlDataReader reader, string columnName);
+        DateTime? HandleGetDateTime(SqlDataReader reader, string columnName);
     }
 }

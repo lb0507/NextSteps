@@ -32,12 +32,14 @@ namespace DataLibrary.ServiceLayer.FuneralService
             var funerals = new List<Funeral>();
             try
             {
+                // Get the database connection string from Azure Key Vault and establish connection
                 using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
                     await conn.OpenAsync();
 
                     using (SqlCommand cmd = new SqlCommand("SELECT * FROM Funerals WHERE UserId = @UserId AND IsDeleted = 0", conn))
                     {
+                        // Add the parameters values to the query
                         cmd.Parameters.AddWithValue("@UserId", userId);
 
                         using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
@@ -48,8 +50,8 @@ namespace DataLibrary.ServiceLayer.FuneralService
                                 {
                                     FuneralId = reader.GetGuid(reader.GetOrdinal("FuneralId")),
                                     DeceasedName = reader.GetString(reader.GetOrdinal("DeceasedName")),
-                                    Location = HanldeGetString(reader, "Location"),
-                                    DateOfService = HanldeGetDateTime(reader, "DateOfService"),
+                                    Location = HandleGetString(reader, "Location"),
+                                    DateOfService = HandleGetDateTime(reader, "DateOfService"),
                                     NumberOfTasks = reader.GetInt32(reader.GetOrdinal("NumberOfTasks")),
                                     UserId = reader.GetGuid(reader.GetOrdinal("UserId")),
                                     IsDeleted = reader.GetBoolean(reader.GetOrdinal("IsDeleted"))
@@ -79,22 +81,21 @@ namespace DataLibrary.ServiceLayer.FuneralService
             funeral.FuneralId = Guid.NewGuid(); // Generate a new unique ID for the funeral
             try
             {
+                // Get the database connection string from Azure Key Vault and establish connection
                 using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
-                    conn.Open();
+                    await conn.OpenAsync();
                     SqlCommand cmd = new SqlCommand(
                         "INSERT INTO Funerals (FuneralId, DeceasedName, UserId, NumberOfTasks, IsDeleted) VALUES (@FuneralId, @DeceasedName, @UserId, 0, 0)", conn);
 
+                    // Add the parameters values to the query
                     cmd.Parameters.AddWithValue("@FuneralId", funeral.FuneralId);
                     cmd.Parameters.AddWithValue("@DeceasedName", funeral.DeceasedName);
                     cmd.Parameters.AddWithValue("@UserId", funeral.UserId);
 
-                    int rowsInserted = cmd.ExecuteNonQuery();
-
-                    if (rowsInserted > 0)
-                    {
+                    // Execute the query and check if a row was affected
+                    if (await cmd.ExecuteNonQueryAsync() > 0)
                         return funeral;
-                    }
                     else
                         return null;
                 }
@@ -118,18 +119,19 @@ namespace DataLibrary.ServiceLayer.FuneralService
             funeral.NumberOfTasks++; // Increment the number of tasks by 1
             try
             {
+                // Get the database connection string from Azure Key Vault and establish connection
                 using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
-                    conn.Open();
+                    await conn.OpenAsync();
                     SqlCommand cmd = new SqlCommand(
                         "UPDATE Funerals SET NumberOfTasks = @numberOfTasks WHERE FuneralId = @funeralId", conn);
 
+                    // Add the parameters values to the query
                     cmd.Parameters.AddWithValue("@funeralId", funeral.FuneralId);
                     cmd.Parameters.AddWithValue("@numberOfTasks", funeral.NumberOfTasks);
 
-                    int rowsInserted = cmd.ExecuteNonQuery();
-
-                    if (rowsInserted > 0)
+                    // Execute the query and check if a row was affected
+                    if (await cmd.ExecuteNonQueryAsync() > 0)
                         return funeral;
                     else
                         return null;
@@ -153,10 +155,12 @@ namespace DataLibrary.ServiceLayer.FuneralService
         {
             try
             {
+                // Get the database connection string from Azure Key Vault and establish connection
                 using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
                     conn.Open();
 
+                    // Build the SQL query depending on which values are null
                     string cmdString = "UPDATE Funerals SET DeceasedName = @DeceasedName";
 
                     if (funeral.DateOfService is not null)
@@ -177,9 +181,8 @@ namespace DataLibrary.ServiceLayer.FuneralService
                         cmd.Parameters.AddWithValue("@Location", funeral.Location);
                     cmd.Parameters.AddWithValue("@FuneralId", funeral.FuneralId);
 
-                    int rowsInserted = cmd.ExecuteNonQuery();
-
-                    if (rowsInserted > 0)
+                    // Execute the query and check if a row was affected
+                    if (await cmd.ExecuteNonQueryAsync() > 0)
                         return funeral;
                     else
                         return null;
@@ -203,15 +206,18 @@ namespace DataLibrary.ServiceLayer.FuneralService
         {
             try
             {
+                // Get the database connection string from Azure Key Vault and establish connection
                 using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
-                    conn.Open();
+                    await conn.OpenAsync();
                     SqlCommand cmd = new SqlCommand(
                         "UPDATE Funerals SET IsDeleted = 1 WHERE FuneralId = @FuneralId", conn);
 
+                    // Add the parameters values to the query
                     cmd.Parameters.AddWithValue("@FuneralId", funeralId);
 
-                    if (cmd.ExecuteNonQuery() > 0)
+                    // Execute the query and check if a row was affected
+                    if (await cmd.ExecuteNonQueryAsync() > 0)
                         return true;
                     else
                         return false;
@@ -229,15 +235,15 @@ namespace DataLibrary.ServiceLayer.FuneralService
         }
 
 
-        // Generic Helper methods for null value handline
-        public string? HanldeGetString(SqlDataReader reader, string columnName)
+        // Generic Helper methods for null value handlig
+        public string? HandleGetString(SqlDataReader reader, string columnName)
         {
             if (!reader.IsDBNull(reader.GetOrdinal(columnName)))
                 return reader.GetString(reader.GetOrdinal(columnName));
             return null;
         }
 
-        public DateTime? HanldeGetDateTime(SqlDataReader reader, string columnName)
+        public DateTime? HandleGetDateTime(SqlDataReader reader, string columnName)
         {
             if (!reader.IsDBNull(reader.GetOrdinal(columnName)))
                 return reader.GetDateTime(reader.GetOrdinal(columnName));

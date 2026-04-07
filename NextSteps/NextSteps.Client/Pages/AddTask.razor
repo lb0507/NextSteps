@@ -55,6 +55,7 @@
             <div class="modal-body">
                 <textarea class="notes-desc-input"
                           @bind="selectedNote.NoteText" 
+                          readonly
                           rows="8" />
             </div>
 
@@ -343,13 +344,14 @@
     {
         if (firstRender)
         {
-            currentUser = await _storage.GetAsync<User>("currentUser") ?? new();
+            // Get the current user from browser storage
+            currentUser = await _storage.GetFromStorage<User>("currentUser") ?? new();
 
             // Check if the user is signed in. If not, navigate them to the Sign In page
             if (currentUser is null)
                 _nav.NavigateTo("/");
 
-            currentFuneral = await _storage.GetAsync<Funeral>("currentFuneral") ?? new();
+            currentFuneral = await _storage.GetFromStorage<Funeral>("currentFuneral") ?? new();
 
             // If a TaskId was passed in through the URL, use it to pull the Task object
             if (taskId is not null)
@@ -422,7 +424,7 @@
             if (taskId is null)
             {
                 currentFuneral = await _funeral.UpdateTaskNumber(currentFuneral) ?? new();
-                await _storage.SetAsync("currentFuneral", currentFuneral);
+                await _storage.SetInStorage("currentFuneral", currentFuneral);
             }            
 
             // Display success message to user and redirect them back to the category page

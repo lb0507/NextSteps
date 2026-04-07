@@ -7,7 +7,6 @@ using System.Text;
 namespace DataLibrary.Models
 {
     public class User : IValidatableObject
-
     {
         public Guid UserId { get; set; }
 
@@ -36,7 +35,5 @@ namespace DataLibrary.Models
                 );
             }
         }
-
-
     }
 }

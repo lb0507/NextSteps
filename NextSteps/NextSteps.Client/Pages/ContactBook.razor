@@ -117,8 +117,15 @@
     </Grid>
 
    <div class="buttons">
+
+       <!-- Add a New Contact -->
         <Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/add-contact">Add Contact</Button>
+
+        <!-- Add New Contacts Via Search -->
         <Button Type="ButtonType.Link" Color="ButtonColor.Secondary" To="/add-vendors-search">Search for Vendors</Button>
+
+        <!-- Refresh the Grid -->
+        <Button Color="ButtonColor.Secondary" @onclick="@(async () => { if (grid is not null) await grid.RefreshDataAsync(); StateHasChanged(); })">Refresh</Button>
    </div>
 
 </div>
@@ -177,8 +184,10 @@
         {
             PreloadService.Show(SpinnerColor.Dark);
 
-            currentUser = await _storage.GetAsync<User>("currentUser") ?? new();
-            currentFuneral = await _storage.GetAsync<Funeral>("currentFuneral") ?? new();
+            // Get the current user from browser storage
+            currentUser = await _storage.GetFromStorage<User>("currentUser") ?? new();
+            // Get the current funeral from browser storage
+            currentFuneral = await _storage.GetFromStorage<Funeral>("currentFuneral") ?? new();
 
             // Check if the user is signed in. If not, navigate them to the Sign In page
             if (currentUser is null)
@@ -191,7 +200,7 @@
                 Contacts = await _contact.GetContacts(currentUser?.UserId ?? Guid.Empty, currentFuneral.FuneralId);
 
                 // A short pause to ensure the contact data loads before the grid is refreshed
-                await Task.Delay(300);
+                await Task.Delay(400);
 
                 // Refresh the grid
                 if(grid is not null)

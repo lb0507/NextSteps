@@ -98,21 +98,22 @@ namespace DataLibrary.ServiceLayer.UserService
 
             try
             {
+                // Get the database connection string from Azure Key Vault and establish connection
                 using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
-                    conn.Open();
+                    await conn.OpenAsync();
                     SqlCommand cmd = new SqlCommand(
                         "INSERT INTO Users (UserId, FirstName, LastName, Email, HashedPassword) VALUES (@UserId, @FirstName, @LastName, @Email, @PasswordHash)", conn);
 
+                    // Add the parameters values to the query
                     cmd.Parameters.AddWithValue("@UserId", user.UserId);
                     cmd.Parameters.AddWithValue("@FirstName", user.FirstName);
                     cmd.Parameters.AddWithValue("@LastName", user.LastName ?? string.Empty);
                     cmd.Parameters.AddWithValue("@Email", user.Email);
                     cmd.Parameters.AddWithValue("@PasswordHash", hashedPassword);
 
-                    int rowsInserted = cmd.ExecuteNonQuery();
-
-                    if (rowsInserted > 0)
+                    // Execute the query and check if a row was affected
+                    if (await cmd.ExecuteNonQueryAsync() > 0)
                         return user;  
                     else
                         return null;
@@ -130,26 +131,27 @@ namespace DataLibrary.ServiceLayer.UserService
             return null;
         }
 
-        // Check for existing emails
+        // Check for existing email addresses
         public async Task<bool> ValidateEmail(string email)
         {
             try
             {
+                // Get the database connection string from Azure Key Vault and establish connection
                 using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
                 {
-                    conn.Open();
+                    await conn.OpenAsync();
                     SqlCommand cmd = new SqlCommand("SELECT COUNT(*) FROM Users WHERE Email = @Email", conn);
+
+                    // Add the parameters values to the query
                     cmd.Parameters.AddWithValue("@Email", email);
 
-                    int emailExists = (int)cmd.ExecuteScalar();
-                    if (emailExists > 0)
-                    {
+                    var emailExists = await cmd.ExecuteScalarAsync();
+                    
+                    // Convert the result to an integer and check if a value was found
+                    if (emailExists != null && (int)emailExists > 0)
                         return true;
-                    }
                     else
-                    {
                         return false;
-                    }
                 }
             }
             catch (SqlException ex)

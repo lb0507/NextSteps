@@ -90,7 +90,7 @@
     {
         if (firstRender)
         {
-            var currentUser = await _storage.GetAsync<User>("currentUser");
+            var currentUser = await _storage.GetFromStorage<User>("currentUser");
             if (currentUser is not null)
             {
                 Console.WriteLine($"user is now: {currentUser?.FirstName}");
@@ -105,7 +105,7 @@
 
         if (result is not null)
         {
-            await _storage.SetAsync("currentUser", result);
+            await _storage.SetInStorage("currentUser", result);
 
             _nav.NavigateTo("/funeral-selection");
         }

@@ -35,9 +35,9 @@ namespace DataLibrary.ServiceLayer.TaskService
         Task<bool> DeleteTask(Guid taskId);
 
         // Helper method for reading nullable string columns
-        string? HanldeGetString(SqlDataReader reader, string? columnName = null, int colIdx = 0);
+        string? HandleGetString(SqlDataReader reader, string? columnName = null, int colIdx = 0);
 
         // Helper method for reading nullable DateTime columns
-        DateTime? HanldeGetDateTime(SqlDataReader reader, string? columnName = null, int colIdx = 0);
+        DateTime? HandleGetDateTime(SqlDataReader reader, string? columnName = null, int colIdx = 0);
     }
 }
