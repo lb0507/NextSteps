@@ -8,9 +8,9 @@
 *@
 
 @using BlazorBootstrap;
-@using DataLibrary;
 @using DataLibrary.Models;
 @using DataLibrary.ServiceLayer.UserService;
+@using System.ComponentModel.DataAnnotations;
 @using NextSteps.Client.Components
 @using NextSteps.Client.Shared
 
@@ -73,8 +73,7 @@
 
 @code {
     private EditContext? editContext;
-    private ValidationMessageStore? messageStore;
-    private User user = new User();
+    private SignInModel user = new SignInModel();
 
     private bool showPassword = false;
     private string pwVisibility = "password";
@@ -82,6 +81,23 @@
     private string password = "";
 
     private ScreenModal modal = default!;
+
+
+    // Model for validating input fields during user sign-in
+    public record SignInModel : IValidatableObject
+    {
+        [Required(ErrorMessage = "Please input an email address.")]
+        [EmailAddress(ErrorMessage = "Please input a valid email address.")]
+        public string Email { get; set; } = "";
+
+        [Required(ErrorMessage = "Please input a password.")]
+        public string Password { get; set; } = "";
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            return new List<ValidationResult>();
+        }
+    }
 
     #region[METHODS]
 
@@ -129,11 +145,6 @@
     {
         // Replace the user with a new instance
         user = new(); 
-
-        // Add placeholder text for non included user attributes for the DataAnnotationsValidator
-        // Note: this is a temporary work around and will be changed later
-        user.FirstName = "placeholder";
-        user.ConfirmPassword = "placeholder";
 
         // Replace the EditContext with a new instance
         editContext = new EditContext(user);

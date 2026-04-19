@@ -60,11 +60,11 @@
                 </td>
 
                 <td>
-                    <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" Class="mb-4" Style="width:18rem;" @onclick="@(() => _nav.NavigateTo("/Schedule"))">
+                    <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" Class="mb-4" Style="width:18rem;" @onclick="@(() => _nav.NavigateTo("/scheduler"))">
                         <CardBody>
                             <Icon Name="IconName.Box" Size="IconSize.x1" Color="IconColor.Light" />
                             <br>
-                            <Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/Schedule">Schedule</Button>
+                            <Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/scheduler">Schedule</Button>
                         </CardBody>
                     </Card>
                 </td>
@@ -126,17 +126,19 @@
                 </td>
                 
                 <td>
-                    <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" Class="mb-4" Style="width:18rem;" @onclick="@(() => _nav.NavigateTo("/Document Library"))">
+                    <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" Class="mb-4" Style="width:18rem;" @onclick="@(() => _nav.NavigateTo("/doc-library"))">
                         <CardBody>
                             <Icon Name="IconName.Box" Size="IconSize.x1" Color="IconColor.Light" />
                             <br>
-                            <Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/library">Document Library</Button>
+                            <Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/doc-library">Document Library</Button>
                         </CardBody>
                     </Card>
                 </td>
 
             </tr>
+
         </table>
+
     </div>
     
 </div>

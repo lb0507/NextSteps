@@ -1,0 +1,270 @@
+﻿@*
+    Schedule Page
+    4/18/2026
+    ======================================
+    - Initial page creation
+    ======================================
+*@
+
+@using BlazorBootstrap
+@using DataLibrary.Models;
+@using DataLibrary.ServiceLayer.FuneralService;
+@using DataLibrary.ServiceLayer.UserService;
+@using DataLibrary.ServiceLayer.EventService;
+@using NextSteps.Client.Shared
+@using NextSteps.Client.Components
+
+<!-- Inject Services -->
+@inject NavigationManager _nav
+@inject BrowserStorageService _storage
+@inject IFuneralService _funeral
+@inject IUserService _user
+@inject IEventService _event
+
+<!-- Allows user to interact -->
+@rendermode InteractiveServer
+
+<!-- Override MainLayout from Server and use Client's Custom Layout-->
+@layout CustomLayout
+
+@page "/scheduler"
+
+<!-- Preload Spinner -->
+<Preload LoadingText="" />
+
+<!-- Screen Message Modal -->
+<ScreenModal @ref="modal" TitleText="@modalTitle" BodyText="@modalBody" URL="@modalURL" />
+
+
+<!-- Screen Message Modal for time conflicts -->
+<DecisionModal @ref="timeConflictModal" 
+    TitleText="Time Conflict Detected" 
+    TopText="This event conflicts with the following event(s):" 
+    MiddleText="@conflictingEvents"
+    BottomText="Would you like to create the event anyway?"
+    Buttons="@modalButtons" />
+
+<div class="page-container">
+
+    <!-- Page Headers -->
+    <h1>Scheduler</h1>
+
+    <!-- Back button to return to category selection/funeral landing page -->
+    <Button Type="ButtonType.Link" To="/funeral">Back to Category Selection</Button>
+
+    <!-- Scheduling Component -->
+    <SfSchedule TValue="Event" Height="650px" @bind-SelectedDate="@CurrentDate" @ref="scheduler" AllowDragAndDrop=false>
+        <ScheduleEvents TValue="Event" ActionCompleted="OnActionPerformed"></ScheduleEvents>
+        <ScheduleEventSettings DataSource="@Events"></ScheduleEventSettings>
+        <ScheduleViews>
+            <ScheduleView Option="View.Day"></ScheduleView>
+            <ScheduleView Option="View.Week"></ScheduleView>
+            <ScheduleView Option="View.WorkWeek"></ScheduleView>
+            <ScheduleView Option="View.Month"></ScheduleView>
+            <ScheduleView Option="View.Agenda"></ScheduleView>
+        </ScheduleViews>
+    </SfSchedule>
+
+</div>
+
+@code {
+
+    [Inject]
+    protected PreloadService PreloadService { get; set; } = default!;
+
+    private User? currentUser;
+    private Funeral currentFuneral = new();
+
+    Syncfusion.Blazor.Schedule.SfSchedule<Event> scheduler = default!;
+
+    #region[MODAL]
+    private ScreenModal modal = default!;
+    private string modalTitle = string.Empty;
+    private string modalBody = string.Empty;
+    private string modalURL = string.Empty;
+    private DecisionModal timeConflictModal = default!;
+    private string conflictingEvents = string.Empty;
+    private Dictionary<string, Func<Task>> modalButtons = new();
+    #endregion
+
+    DateTime CurrentDate = DateTime.Now;
+    List<Event> Events = new List<Event>();
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // PreloadService.Show(SpinnerColor.Dark);
+
+            // Get the current user from browser storage
+            currentUser = await _storage.GetFromStorage<User>("currentUser") ?? new();
+            // Get the current funeral from browser storage
+            currentFuneral = await _storage.GetFromStorage<Funeral>("currentFuneral") ?? new();
+
+            // Check if the user is signed in. If not, navigate them to the Sign In page
+            if (currentUser is null)
+            {
+                _nav.NavigateTo("/");
+            }
+            else
+            {
+                // Pull the events for the current funeral
+                Events = await _event.GetEvents(currentUser.UserId, currentFuneral.FuneralId);
+            }
+            StateHasChanged();
+            // PreloadService.Hide();
+        }
+    }
+
+    // Handle actions performed in the Scheduler (Event creation, deletion, modification)
+    private async Task OnActionPerformed(ActionEventArgs<Event> args)
+    {
+        if (args.ActionType.ToString() == "EventCreate") // Handles event create and update
+        {
+            // Ensure the event exists
+            if (args.AddedRecords.FirstOrDefault() is null)
+                return;
+
+            // Check for time conflicts
+            await HandleConflictCheck(args.AddedRecords.FirstOrDefault() ?? new());
+        }
+        else if (args.ActionType.ToString() == "EventRemove") // Handles event deletion
+        {
+            // Ensure the event exists
+            if (args.DeletedRecords.FirstOrDefault() is null)
+                return;
+
+            // Call the method to handle the deletion
+            await HandleEventDelete((args.DeletedRecords.FirstOrDefault() ?? new()).EventId);
+        }
+    }
+
+    #region[EVENT HANDLERS]
+
+    // Method for handling the time conflict check between events
+    private async Task HandleConflictCheck(Event evnt)
+    {
+        // Check if the event time overlaps with any existing events
+        var conflicts = await _event.CheckForConflict(evnt.StartTime, evnt.EndTime, currentUser?.UserId ?? Guid.Empty, evnt.EventId);
+
+        // If time conflicts are found, notify the user
+        if (conflicts.Any())
+        {
+            conflictingEvents = "";
+
+            // Build the message for the modal saying which events have conflicting times
+            foreach (var conflict in conflicts)
+            {
+                conflictingEvents += $"{conflict.Subject} from {conflict.StartTime.ToString("dd MMM yyyy hh:mm")} to {conflict.EndTime.ToString("dd MMM yyyy hh:mm")}; ";
+            }
+
+            // Add the buttons to the modal
+            modalButtons = new Dictionary<string, Func<Task>>
+            {
+                ["Save Event"] = async () => // Button for proceeding with the event creation/update
+                {
+                    // Close the modal
+                    await timeConflictModal.OnHideModalClick(); 
+
+                    // Create or update the event
+                    if (evnt.EventId == Guid.Empty)
+                        await HandleCreateEvent(evnt);
+                    else
+                        await HandleUpdateEvent(evnt); 
+                },
+                // Button for canceling event creation/update; Remove the event since it was automatically added by the component, close the modal, then refresh the scheduler to render the current state
+                ["Cancel"] = async () => { Events.Remove(evnt); await timeConflictModal.OnHideModalClick(); await scheduler.RefreshAsync(); } 
+            };
+
+            // Display modal to user
+            await timeConflictModal.OnShowModalClick();
+        }
+        else
+        {
+            // No conflicts, create or update the event
+            if (evnt.EventId == Guid.Empty)
+                await HandleCreateEvent(evnt);
+            else
+                await HandleUpdateEvent(evnt);
+        }
+    }
+
+    // Method for creating a new event
+    private async Task HandleCreateEvent(Event evnt)
+    {
+        // Set the UserId and FuneralId
+        evnt.UserId = currentUser?.UserId ?? Guid.Empty;
+        evnt.FuneralId = currentFuneral.FuneralId;
+        evnt.IsGlobal = false; // Make the event specific to this funeral only -- option for global events will be added later
+
+        // Create the event in the database
+        var result = await _event.CreateEvent(evnt);
+
+        if (result is not null)
+        {
+            // Display success message to user
+            modalTitle = "Save Successful";
+            modalBody = "The event has been added to your calendar for this funeral.";
+            await modal.OnShowModalClick();
+        }
+        else
+        {
+            // Display error message to user
+            modalTitle = "Error";
+            modalBody = "An error occurred and the event was not saved.";
+            await modal.OnShowModalClick();
+        }
+    }
+
+    // Method for updating an existing event
+    private async Task HandleUpdateEvent(Event evnt)
+    {
+        // Update the event in the database
+        var result = await _event.UpdateEvent(evnt);
+
+        if (result is not null)
+        {
+            // Display success message to user
+            modalTitle = "Save Successful";
+            modalBody = "The changes to the event has been saved.";
+            await modal.OnShowModalClick();
+        }
+        else
+        {
+            // Display error message to user
+            modalTitle = "Error";
+            modalBody = "An error occurred and the event was not saved.";
+            await modal.OnShowModalClick();
+        }
+        
+    }
+
+    // Method for deleting an event
+    private async Task HandleEventDelete(Guid eventId)
+    {
+        // Delete the event
+        var result = await _event.DeleteEvent(eventId);
+
+        if (result)
+        {
+            // Display success message to user
+            modalTitle = "Deletion Successful";
+            modalBody = "The event has been deleted.";
+            await modal.OnShowModalClick();
+        }
+        else
+        {
+            // Display error message to user
+            modalTitle = "Error";
+            modalBody = "An error occurred and the event was not deleted.";
+            await modal.OnShowModalClick();
+        }
+
+        // Repopulate the events list since deleting an event seems to clear it
+        Events = await _event.GetEvents(currentUser?.UserId ?? Guid.Empty, currentFuneral.FuneralId);
+        await scheduler.RefreshAsync();
+    }
+
+    #endregion
+}

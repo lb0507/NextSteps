@@ -13,3 +13,5 @@ OR
 - Add archiving to funerals
 
 - Fix editContext thing for signin/signout
+
+- See about fixing task number filter

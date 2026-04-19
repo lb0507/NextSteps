@@ -1,12 +1,15 @@
 using Azure.Identity;
+using DataLibrary.ServiceLayer.BlobService;
 using DataLibrary.ServiceLayer.ContactService;
+using DataLibrary.ServiceLayer.EventService;
 using DataLibrary.ServiceLayer.FuneralService;
+using DataLibrary.ServiceLayer.MapService;
 using DataLibrary.ServiceLayer.NoteService;
 using DataLibrary.ServiceLayer.TaskService;
 using DataLibrary.ServiceLayer.UserService;
-using DataLibrary.ServiceLayer.MapService;
 using NextSteps.Client;
 using NextSteps.Components;
+using Syncfusion.Blazor;
 
 namespace NextSteps
 {
@@ -29,6 +32,10 @@ namespace NextSteps
 
             builder.Services.AddBlazorBootstrap();
 
+            // Get the Syncfusion license key from Azure Key Vault and register it
+            Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(builder.Configuration["SyncfusionLicense"]);
+            builder.Services.AddSyncfusionBlazor();
+
             builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
             builder.Services.AddScoped<BrowserStorageService>();
             builder.Services.AddScoped<IUserService, UserService>();// add User API services
@@ -36,7 +43,9 @@ namespace NextSteps
             builder.Services.AddScoped<ITaskService, TaskService>();// add Task API services
             builder.Services.AddScoped<INoteService, NoteService>();// add Note API services
             builder.Services.AddScoped<IContactService, ContactService>();// add Contact API services
+            builder.Services.AddScoped<IEventService, EventService>();// add Event API services
             builder.Services.AddScoped<IMapService, MapService>();// add Map API services
+            builder.Services.AddScoped<IBlobService, BlobService>();// add Blob API services
 
             var app = builder.Build();
 

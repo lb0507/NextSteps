@@ -1,0 +1,193 @@
+﻿@*
+    Document Library Page
+    4/19/2026
+    ======================================
+    - Initial page creation
+    ======================================
+    Storage page for documents
+*@
+
+@using BlazorBootstrap
+@using DataLibrary.Models;
+@using DataLibrary.ServiceLayer.TaskService;
+@using DataLibrary.ServiceLayer.FuneralService;
+@using DataLibrary.ServiceLayer.BlobService;
+@using NextSteps.Client.Components
+@using Azure.Storage.Blobs.Models
+@using NextSteps.Client.Shared
+
+<!-- Inject Services -->
+@inject NavigationManager _nav
+@inject BrowserStorageService _storage
+@inject ITaskService _task
+@inject IFuneralService _funeral
+@inject IBlobService _blob
+@inject IJSRuntime _js
+
+<!-- Allows user to interact -->
+@rendermode InteractiveServer
+
+<!-- Override MainLayout from Server and use Client's Custom Layout-->
+@layout CustomLayout
+
+@page "/doc-library"
+
+<!-- Preload Spinner -->
+<Preload LoadingText="" />
+
+<div class="page-container">
+
+    <h3>Document Library</h3>
+
+    <!-- Back button to return to category selection/funeral landing page -->
+    <Button Type="ButtonType.Link" To="/funeral">Back to Category Selection</Button>
+
+    <div class="tabs-container">
+        <Tabs>
+            <Tab Title="Templates">
+                <Content>
+
+                    <div class="content-container">
+
+                        <div class="table-container">
+
+                            <!-- Table of Documents -->
+                            <Grid TItem="BlobItem"
+                                  @ref="grid"
+                                  AllowFiltering="true"
+                                  AllowPaging="true"
+                                  AllowSorting="true"
+                                  AllowRowClick="true"
+                                  OnRowDoubleClick="OnRowDoubleClick"
+                                  Class="table table-hover table-bordered table-striped"
+                                  DataProvider="TasksDataProvider"
+                                  PageSize="10"
+                                  Responsive="true"
+                                  RowKeySelector="(task) => task.Name">
+
+                                <GridColumns>
+
+                                    <!-- Document Name Column -->
+                                    <GridColumn TItem="BlobItem" HeaderText="Document Name" PropertyName="Name" SortKeySelector="item => item.Name">
+                                        @context.Name
+                                    </GridColumn>
+
+                                    <!-- Download Button Column -->
+                                    <GridColumn TItem="BlobItem" HeaderText="Download" PropertyName="Name" SortKeySelector="item => item.Name" Filterable=false Sortable=false>
+                                        <Button @onclick="@(async() => await _js.InvokeVoidAsync("downloadDocument", context.Name, DocData[context.Name]))">Download</Button>
+                                    </GridColumn>
+
+                                </GridColumns>
+
+                            </Grid>
+
+                        </div>
+
+                        <div class="viewer-container">
+
+                            @if (showPDFViewer)
+                            {
+                                <PdfViewer Url="@selectedDoc"
+                                                @key="selectedDoc"/>
+                            }
+                            else
+                            {
+                                <div class="right-side-text">
+                                    <h2>Double-click on a document's name to view it...</h2>
+                                </div>
+                            }
+
+                        </div>
+
+                    </div>
+                    
+                </Content>
+
+            </Tab>
+
+        </Tabs>
+
+    </div>
+
+</div>
+
+@code {
+    [Inject]
+    protected PreloadService PreloadService { get; set; } = default!;
+
+    private Funeral currentFuneral = new();
+
+    private User? currentUser;
+
+    private List<BlobItem> Documents = new();
+
+    private bool showPDFViewer = false;
+    private string selectedDoc = "";
+    private Dictionary<string, string> DocData = new();
+
+    #region [GRID]
+
+    private BlazorBootstrap.Grid<BlobItem>? grid;
+
+    // Populate the grid with tasks
+    private async Task<GridDataProviderResult<BlobItem>> TasksDataProvider(GridDataProviderRequest<BlobItem> request) => await Task.FromResult(request.ApplyTo(Documents));
+
+    // On Clicking a row in the table, navigate to the details page of that corresponding Task
+    private async Task OnRowDoubleClick(GridRowEventArgs<BlobItem> args)
+    {
+        // Set the URL for the pdf
+        selectedDoc = $"data:application/pdf;base64,{DocData[args.Item.Name]}";
+
+        // Show the PDF Viewer
+        showPDFViewer = true;
+        StateHasChanged();
+    }
+
+    #endregion
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Show loading spinner
+            PreloadService.Show(SpinnerColor.Dark);
+
+            // Get the current user from browser storage
+            currentUser = await _storage.GetFromStorage<User>("currentUser") ?? new();
+
+            // Check if the user is signed in. If not, navigate them to the Sign In page
+            if (currentUser is null)
+            {
+                _nav.NavigateTo("/");
+            }
+            else
+            {
+                // Get the selected Funeral from browser storage
+                currentFuneral = await _storage.GetFromStorage<Funeral>("currentFuneral") ?? new();
+
+                // Get the documents from the blob storage container
+                Documents = await _blob.GetDocuments();
+
+                // Iterate through the documents and add them to the DocData dictionary
+                foreach (var doc in Documents)
+                {
+                    // Use the document's name to get its bytes
+                    var bytes = await _blob.GetDocumentBytes(doc.Name);
+
+                    // Convert the bytes to a base64 string
+                    var base64 = Convert.ToBase64String(bytes);
+
+                    // Add the bytes to the dictionary with the document's name as the key
+                    DocData.Add(doc.Name, base64);              
+                }
+                // Refresh the grid
+                if (grid is not null)
+                    await grid.RefreshDataAsync();
+
+                // Hide loading spinner
+                PreloadService.Hide();
+            }
+        }
+        StateHasChanged();
+    }
+}

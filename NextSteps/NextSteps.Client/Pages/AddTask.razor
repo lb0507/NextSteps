@@ -552,10 +552,9 @@
             // Add the New note to the Notes grid
             Notes.Add(result);
 
-            // Refresh the grid
+            // Refresh the Notes grid
             if (grid is not null)
                 await grid.RefreshDataAsync();
-
         }
         else
         {
@@ -566,6 +565,7 @@
         }
     }
 
+    // Handle Note Deletion
     private async Task HandleNoteDeletion()
     {
         // Delete the selected Note

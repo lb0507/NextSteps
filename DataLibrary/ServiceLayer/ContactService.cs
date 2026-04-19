@@ -81,7 +81,7 @@ namespace DataLibrary.ServiceLayer.ContactService
         }
 
 
-        // Get all Contacts associated with the current user and funeral is applicable
+        // Get all Contacts associated with the current user and funeral if applicable
         public async Task<List<Contact>> GetContacts(Guid userId, Guid funeralId)
         {
             var contacts = new List<Contact>();
@@ -313,7 +313,7 @@ namespace DataLibrary.ServiceLayer.ContactService
         }
 
 
-        // Generic Helper methods for null value handline
+        // Generic Helper methods for null value handling
 
         // Handle reading null strings from database
         public string? HandleGetString(SqlDataReader reader, string columnName)

@@ -35,12 +35,51 @@
 <!-- Modal for Adding new Funerals -->
 <Modal @ref="modal" Title="Add New Funeral Service">
     <BodyTemplate>
+        
+        <table style="width: 100%">
 
-        <label>
-            Name of Deceased:
-        </label>
+            <colgroup>
+                <col span="1" style="width: 35%;" />
+            </colgroup>
+            <colgroup>
+                <col span="1" style="width: 65%;" />
+            </colgroup>
 
-        <input @bind="name" />
+            <tr>
+                <td>
+                    <label>
+                        Name of Deceased:
+                    </label>
+                </td>
+                <td>
+                    <input @bind="name" style="width: 90%"/>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>
+                        Date of Service:
+                    </label>
+                </td>
+                <td>
+                    <input type="date"
+                           @bind="@date"
+                           ShowSeconds="false" />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>
+                        Location of Service:
+                    </label>
+                </td>
+                <td>
+                    <input @bind="location" style="width: 90%" />
+                </td>
+            </tr>
+
+        </table>
+        
     </BodyTemplate>
     <FooterTemplate>
         <Button Color="ButtonColor.Secondary" @onclick="OnHideModalClick">Back</Button>
@@ -102,7 +141,7 @@
 @code {
     [Inject]
     protected PreloadService PreloadService { get; set; } = default!;
-    
+
     private List<Funeral> Funerals = new();
 
     private User? currentUser;
@@ -116,6 +155,8 @@
     #endregion
 
     private string name = "";
+    private DateTime? date;
+    private string? location;
 
     #region [GRID]
 
@@ -181,7 +222,9 @@
             new Funeral
             {
                 DeceasedName = name,
-                UserId = currentUser?.UserId ?? Guid.Empty
+                UserId = currentUser?.UserId ?? Guid.Empty,
+                DateOfService = date,
+                Location = location
             }
         );
 

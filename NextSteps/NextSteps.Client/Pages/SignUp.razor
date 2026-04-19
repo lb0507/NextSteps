@@ -8,7 +8,6 @@
 *@
 
 @using BlazorBootstrap
-@using DataLibrary;
 @using DataLibrary.Models;
 @using DataLibrary.ServiceLayer.UserService;
 @using System.ComponentModel.DataAnnotations;
@@ -95,7 +94,7 @@
 @code {
 
     private EditContext? editContext;
-    private User user = new User();
+    private SignUpModel user = new SignUpModel();
 
     private bool showPassword = false;
     private string pwVisibility = "password";
@@ -103,6 +102,36 @@
     private ScreenModal modal = default!;
     private string modalTitle = string.Empty;
     private string modalBody = string.Empty;
+
+
+    // Model for validating fields during user registration
+    public record SignUpModel : IValidatableObject
+    {
+        [Required(ErrorMessage = "Please input a name.")]
+        public string? FirstName { get; set; }
+        public string? LastName { get; set; }
+
+        [Required(ErrorMessage = "Please input an email address.")]
+        [EmailAddress(ErrorMessage = "Please input a valid email address.")]
+        public string Email { get; set; } = "";
+
+        [Required(ErrorMessage = "Please input a password.")]
+        public string Password { get; set; } = "";
+
+        [Required(ErrorMessage = "Please verify the password.")]
+        public string? ConfirmPassword { get; set; }
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (Password != ConfirmPassword)
+            {
+                yield return new ValidationResult(
+                    "Passwords do not match.",
+                    new[] { nameof(ConfirmPassword) }
+                );
+            }
+        }
+    }
 
 
     #region[METHODS]
@@ -128,7 +157,13 @@
         else
         {
             // Create the user in the database
-            var result = await _user.RegisterUser(user);
+            var result = await _user.RegisterUser(new User
+                                                {
+                                                    FirstName = user.FirstName,
+                                                    LastName = user.LastName,
+                                                    Email = user.Email,
+                                                    Password = user.Password
+                                                });
 
             if (result is not null)
             {

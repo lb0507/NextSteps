@@ -1,0 +1,83 @@
+﻿@*
+    DecisionModal Component
+    4/19/2026
+    ======================================
+    - Initial component creation
+    ======================================
+*@
+
+@using BlazorBootstrap
+
+@inject NavigationManager _nav
+
+<!-- Modal component with custom title -->
+<Modal @ref="modal" Title=@TitleText >
+    
+    <!-- Body of the modal with custom text -->
+    <BodyTemplate>
+        @TopText
+        <br />
+        <br />
+        @MiddleText
+        <br />
+        <br />
+        @BottomText
+    </BodyTemplate>
+    
+    <FooterTemplate>
+
+        <!-- The passed in Buttons -->
+        @foreach (var button in Buttons ?? new Dictionary<string, Func<Task>>())
+        {
+            <Button Color="ButtonColor.Primary" @onclick="@button.Value">@button.Key</Button>
+        }
+      
+    </FooterTemplate>
+
+</Modal>
+
+@code {
+
+    // Title of the modal
+    [Parameter]
+    public string TitleText { get; set; } = string.Empty;
+
+    // Top of the body text
+    [Parameter]
+    public string TopText { get; set; } = string.Empty;
+
+    // Middle of the body text
+    [Parameter]
+    public string MiddleText { get; set; } = string.Empty;
+
+    // Bottom of the body text
+    [Parameter]
+    public string BottomText { get; set; } = string.Empty;
+
+    // Optional, the URL to navigate to after closing the modal
+    [Parameter]
+    public string? URL { get; set; }
+
+    // The Buttons to be rendered on the modal
+    [Parameter]
+    public Dictionary<string, Func<Task>>? Buttons { get; set; }
+
+    private Modal modal = default!;
+
+
+    // Open the modal
+    public async Task OnShowModalClick() => await modal.ShowAsync();
+
+    // Close the modal
+    public async Task OnHideModalClick()
+    {
+        // Close the modal
+        await modal.HideAsync();
+
+        // If a URL was passed in, navigate to it after hiding the modal
+        if (!string.IsNullOrEmpty(URL))
+        {
+            _nav.NavigateTo(URL);
+        }
+    }
+}
