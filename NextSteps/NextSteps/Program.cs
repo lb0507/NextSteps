@@ -19,11 +19,12 @@ namespace NextSteps
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add the key vault
-            builder.Configuration.AddAzureKeyVault(
-                new Uri(builder.Configuration["KeyVault:VaultUri"]),
-                new DefaultAzureCredential()
-            );
+            // Check that the URI string is not empty and add the key vault
+            var keyVaultUriString = builder.Configuration["KeyVault:VaultUri"];
+            if (!string.IsNullOrWhiteSpace(keyVaultUriString) && Uri.TryCreate(keyVaultUriString, UriKind.Absolute, out var keyVaultUri))
+                builder.Configuration.AddAzureKeyVault(keyVaultUri, new DefaultAzureCredential());
+            else
+                throw new InvalidOperationException("Configuration value 'KeyVault:VaultUri' is missing or is not valid.");
 
             // Add services to the container
             builder.Services.AddRazorComponents()
