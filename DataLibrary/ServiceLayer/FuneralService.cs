@@ -54,7 +54,9 @@ namespace DataLibrary.ServiceLayer.FuneralService
                                     DateOfService = HandleGetDateTime(reader, "DateOfService"),
                                     NumberOfTasks = reader.GetInt32(reader.GetOrdinal("NumberOfTasks")),
                                     UserId = reader.GetGuid(reader.GetOrdinal("UserId")),
-                                    IsDeleted = reader.GetBoolean(reader.GetOrdinal("IsDeleted"))
+                                    IsDeleted = reader.GetBoolean(reader.GetOrdinal("IsDeleted")),
+                                    Obituary = HandleGetString(reader, "Obituary"),
+                                    IsArchived = reader.GetBoolean(reader.GetOrdinal("IsArchived"))
                                 };
                                 funerals.Add(funeral);
                             }
@@ -160,25 +162,18 @@ namespace DataLibrary.ServiceLayer.FuneralService
                 {
                     conn.Open();
 
-                    // Build the SQL query depending on which values are null
-                    string cmdString = "UPDATE Funerals SET DeceasedName = @DeceasedName";
-
-                    if (funeral.DateOfService is not null)
-                        cmdString = cmdString + ", DateOfService = @DateOfService";
-
-                    if (funeral.Location is not null)
-                        cmdString = cmdString + ", Location = @Location";
-
-                    cmdString = cmdString + " WHERE FuneralId = @FuneralId";
-
-                    SqlCommand cmd = new SqlCommand(cmdString, conn);
+                    SqlCommand cmd = new SqlCommand
+                    (
+                        "UPDATE Funerals SET DeceasedName = @DeceasedName, DateOfService = @DateOfService, Location = @Location, Obituary = @Obituary, IsArchived = @IsArchived WHERE FuneralId = @FuneralId",
+                        conn
+                    );
 
                     // Add parameters to the query
                     cmd.Parameters.AddWithValue("@DeceasedName", funeral.DeceasedName);
-                    if (funeral.DateOfService is not null)
-                        cmd.Parameters.AddWithValue("@DateOfService", funeral.DateOfService);
-                    if (funeral.Location is not null)
-                        cmd.Parameters.AddWithValue("@Location", funeral.Location);
+                    cmd.Parameters.AddWithValue("@DateOfService", (funeral.DateOfService is null) ? DBNull.Value : funeral.DateOfService);
+                    cmd.Parameters.AddWithValue("@Location", string.IsNullOrEmpty(funeral.Location) ? DBNull.Value : funeral.Location);
+                    cmd.Parameters.AddWithValue("@Obituary", string.IsNullOrEmpty(funeral.Obituary) ? DBNull.Value : funeral.Obituary);
+                    cmd.Parameters.AddWithValue("@IsArchived", funeral.IsArchived);
                     cmd.Parameters.AddWithValue("@FuneralId", funeral.FuneralId);
 
                     // Execute the query and check if a row was affected

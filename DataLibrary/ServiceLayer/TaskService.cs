@@ -141,9 +141,10 @@ namespace DataLibrary.ServiceLayer.TaskService
                     await conn.OpenAsync();
 
                     using (SqlCommand cmd = new SqlCommand
-                            (
+                          (
                             "SELECT COUNT( CASE WHEN FuneralId = @FuneralId AND IsDeleted = 0 AND IsComplete = 1 THEN 1 END ) AS complete_tasks, COUNT( CASE WHEN FuneralId = @FuneralId AND IsDeleted = 0 THEN 1 END ) AS total_tasks FROM Tasks;", 
-                            conn))
+                            conn
+                           ))
                     {
                         // Add the parameters values to the query
                         cmd.Parameters.AddWithValue("@FuneralId", funeral);
@@ -184,12 +185,11 @@ namespace DataLibrary.ServiceLayer.TaskService
                 {
                     await conn.OpenAsync();
 
-                    SqlCommand cmd = new SqlCommand();
-
-                    if (task.CompletionDate is null)
-                        cmd = new SqlCommand("INSERT INTO Tasks (TaskId, TaskNumber, Description, Category, IsComplete, CreationDate, FuneralId, IsDeleted) VALUES (@TaskId, @TaskNumber, @Description, @Category, @IsComplete, @CreationDate, @FuneralId, 0)", conn);
-                    else
-                        cmd = new SqlCommand("INSERT INTO Tasks (TaskId, TaskNumber, Description, Category, IsComplete, CreationDate, CompletionDate, FuneralId, IsDeleted) VALUES (@TaskId, @TaskNumber, @Description, @Category, @IsComplete, @CreationDate, @CompletionDate, @FuneralId, 0)", conn);
+                    SqlCommand cmd = new SqlCommand
+                    (
+                        "INSERT INTO Tasks (TaskId, TaskNumber, Description, Category, IsComplete, CreationDate, CompletionDate, FuneralId, IsDeleted) VALUES (@TaskId, @TaskNumber, @Description, @Category, @IsComplete, @CreationDate, @CompletionDate, @FuneralId, 0)",
+                        conn
+                    );
 
                     // Add the parameters values to the query
                     cmd.Parameters.AddWithValue("@TaskId", task.TaskId);
@@ -198,8 +198,7 @@ namespace DataLibrary.ServiceLayer.TaskService
                     cmd.Parameters.AddWithValue("@Category", task.Category);
                     cmd.Parameters.AddWithValue("@IsComplete", task.IsComplete);
                     cmd.Parameters.AddWithValue("@CreationDate", task.CreationDate);
-                    if (task.CompletionDate is not null)
-                        cmd.Parameters.AddWithValue("@CompletionDate", task.CompletionDate);
+                    cmd.Parameters.AddWithValue("@CompletionDate", (task.CompletionDate is null) ? DBNull.Value : task.CompletionDate);
                     cmd.Parameters.AddWithValue("@FuneralId", task.FuneralId);
 
                     // Execute the query and check if a row was affected
@@ -232,20 +231,16 @@ namespace DataLibrary.ServiceLayer.TaskService
                 {
                     await conn.OpenAsync();
 
-                    string cmdString = "UPDATE Tasks SET Description = @Description, IsComplete = @IsComplete";
-
-                    if (task.CompletionDate is not null)
-                        cmdString = cmdString + ", CompletionDate = @CompletionDate";
-
-                    cmdString = cmdString + " WHERE TaskId = @TaskId";
-
-                    SqlCommand cmd = new SqlCommand(cmdString, conn);
+                    SqlCommand cmd = new SqlCommand
+                    (
+                        "UPDATE Tasks SET Description = @Description, IsComplete = @IsComplete, CompletionDate = @CompletionDate WHERE TaskId = @TaskId", 
+                        conn
+                    );
 
                     // Add the parameters values to the query
                     cmd.Parameters.AddWithValue("@Description", task.Description);
                     cmd.Parameters.AddWithValue("@IsComplete", task.IsComplete);
-                    if (task.CompletionDate is not null)
-                        cmd.Parameters.AddWithValue("@CompletionDate", task.CompletionDate);
+                    cmd.Parameters.AddWithValue("@CompletionDate", (task.CompletionDate is null) ? DBNull.Value : task.CompletionDate);
                     cmd.Parameters.AddWithValue("@TaskId", task.TaskId);
 
                     // Execute the query and check if a row was affected

@@ -34,27 +34,10 @@
 
 
 <!-- Modal for Confirming the Deletion of the Funeral -->
-<Modal @ref="confirmationModal" Title="Confirm Deletion?"
-       IsVerticallyCentered
-       Size="ModalSize.Regular">
-    <BodyTemplate>
-
-        <div class="modal-body">
-            <span>Please confirm that you would like to delete this funeral. This action cannot be undone.</span>
-        </div>
-
-    </BodyTemplate>
-    <FooterTemplate>
-
-        <!-- Cancel Deletion Button -->
-        <Button Color="ButtonColor.Secondary" @onclick="confirmationModal.HideAsync">Cancel</Button>
-        
-        <!-- Confirm Deletion Button -->
-        <Button Color="ButtonColor.Danger" @onclick="HandleDeletion">Delete</Button>
-
-    </FooterTemplate>
-</Modal>
-
+<DecisionModal @ref="confirmationModal"
+             TitleText="Confirm Deletion?"
+             MiddleText="Please confirm that you would like to delete this funeral. This action cannot be undone."
+             Buttons="@modalButtons" />
 
 
 <div class="page-container">
@@ -136,8 +119,11 @@
                         <div class="buttons">
 
                             <!-- Delete Funeral Button -->
-                            <Button Color="ButtonColor.Danger" @onclick="HandleDeletionConfirmation">Delete this Funeral</Button>
+                            <Button Color="ButtonColor.Danger" @onclick="async () => { await confirmationModal.OnShowModalClick();}">Delete this Funeral</Button>
             
+                            <!-- Archive/Unarchive Funeral Button -->
+                            <Button Color="ButtonColor.Secondary" @onclick="HandleArchive">@(currentFuneral.IsArchived ? "Unarchive" : "Archive")</Button>
+
                             <!-- Save Funeral Info Button -->
                             <Button Color="ButtonColor.Primary" @onclick="HandleSave">Save Funeral Info</Button>
 
@@ -162,10 +148,14 @@
 
     #region[MODAL]
     private ScreenModal modal = default!;
-    private Modal confirmationModal = default!;
+    private DecisionModal confirmationModal = default!;
     private string modalTitle = string.Empty;
     private string modalBody = string.Empty;
     private string modalURL = string.Empty;
+
+    // Buttons container for the deletion confirmation modal
+    private Dictionary<string, (Func<Task>, BlazorBootstrap.ButtonColor)> modalButtons = new();
+
     #endregion
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -184,6 +174,24 @@
             {
                 // Get the selected Funeral from browser storage
                 currentFuneral = await _storage.GetFromStorage<Funeral>("currentFuneral") ?? new();
+
+                // Set the buttons for the deletion confirmation modal
+                modalButtons = new Dictionary<string, (Func<Task>, BlazorBootstrap.ButtonColor)>
+                {
+                    // Button for cancelling the deletion
+                    ["Cancel"] =
+                    (
+                        async () => { await confirmationModal.OnHideModalClick(); },
+                        ButtonColor.Secondary
+                    ),
+
+                    // Button for proceeding with the deletion
+                    ["Delete"] =
+                    (
+                        async () => { await confirmationModal.OnHideModalClick(); await HandleDeletion(); },
+                        ButtonColor.Danger
+                    )
+                };
             }
         }
         StateHasChanged();
@@ -223,12 +231,52 @@
         }
     }
 
-    private async Task HandleDeletionConfirmation() => await confirmationModal.ShowAsync();
+    // Handle archiving the funeral
+    private async Task HandleArchive()
+    {
+        // Display an error message to the user if they attempt to save the funeral info without entering a description
+        if (string.IsNullOrWhiteSpace(currentFuneral.DeceasedName))
+        {
+            modalTitle = "Error";
+            modalBody = "Name of Deceased cannot be empty. Please enter a name and try again.";
+            await modal.OnShowModalClick();
+            return;
+        }
 
+        // Switch the value of the IsArchived boolean
+        currentFuneral.IsArchived = !currentFuneral.IsArchived;
+
+        // Update the funeral
+        var result = await _funeral.UpdateFuneral(currentFuneral);
+
+        if (result is not null)
+        {
+            // update the funeral in browser storage
+            await _storage.SetInStorage("currentFuneral", result);
+
+            // Display success message to user and redirect them back to the category page
+            modalTitle = "Success";
+            if (result.IsArchived)
+                modalBody = "The funeral has been archived.";
+            else
+                modalBody = "The funeral has been unarchived.";
+            await modal.OnShowModalClick();
+        }
+        else
+        {
+            // Switch the value of the IsArchived boolean back to its original value so it doesn't appear changed in the UI
+            currentFuneral.IsArchived = !currentFuneral.IsArchived;
+
+            // Display error message to user
+            modalTitle = "Error";
+            modalBody = $"An error occurred and the funeral was not updated.";
+            await modal.OnShowModalClick();
+        }
+    }
+
+    // Handle the deletion of the funeral
     private async Task HandleDeletion()
     {
-        await confirmationModal.HideAsync();
-
         var result = await _funeral.DeleteFuneral(currentFuneral.FuneralId);
 
         if (result)

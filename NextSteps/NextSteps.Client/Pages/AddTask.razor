@@ -32,7 +32,7 @@
 @page "/task/{taskId:guid}"
 
 <!-- Screen Message Modal -->
-<ScreenModal @ref="modal" TitleText="@modalTitle" BodyText="@modalBody" URL="@modalURL"/>
+<ScreenModal @ref="modal" TitleText="@modalTitle" BodyText="@modalBody" URL="@modalURL" />
 
 
 <!-- Modal for view Notes attached to the Task -->
@@ -91,28 +91,10 @@
 
 
 <!-- Modal for Confirming the Deletion of the Task -->
-<Modal @ref="confirmationModal" Title="Confirm Deletion?"
-       IsVerticallyCentered
-       Size="ModalSize.Regular">
-
-    <BodyTemplate>
-
-        <div class="modal-body">
-            <span>Please confirm that you would like to delete this task. This action cannot be undone.</span>
-        </div>
-
-    </BodyTemplate>
-
-    <FooterTemplate>
-
-        <!-- Cancel Button -->
-        <Button Color="ButtonColor.Secondary" @onclick="confirmationModal.HideAsync">Cancel</Button>
-        
-        <!-- Delete Button -->
-        <Button Color="ButtonColor.Danger" @onclick="HandleTaskDeletion">Delete</Button>
-
-    </FooterTemplate>
-</Modal>
+<DecisionModal @ref="confirmationModal"
+               TitleText="Confirm Deletion?"
+               MiddleText="Please confirm that you would like to delete this task. This action cannot be undone."
+               Buttons="@modalButtons" />
 
 
 <div class="page-container" style="display: flex; width: 100%;  height: 85vh;">
@@ -265,7 +247,7 @@
             <!-- Delete Task Button (if not a new task) -->
             @if (taskId is not null)
             {
-                <Button Color="ButtonColor.Danger" @onclick="HandleTaskDeletionConfirmation">Delete Task</Button>
+                <Button Color="ButtonColor.Danger" @onclick="async () => { await confirmationModal.OnShowModalClick(); }">Delete Task</Button>
             }
             
             <!-- Save Task Button -->
@@ -336,10 +318,13 @@
 
     #region[MODAL]
     private ScreenModal modal = default!;
-    private Modal confirmationModal = default!;
+    private DecisionModal confirmationModal = default!;
     private string modalTitle = string.Empty;
     private string modalBody = string.Empty;
     private string modalURL = string.Empty;
+
+    // Buttons container for the deletion confirmation modal
+    private Dictionary<string, (Func<Task>, BlazorBootstrap.ButtonColor)> modalButtons = new();
     #endregion
 
     #region [GRID]
@@ -408,6 +393,25 @@
                     backURL = task.Category;
                     break;
             }
+
+            // Set the buttons for the deletion confirmation modal
+            modalButtons = new Dictionary<string, (Func<Task>, BlazorBootstrap.ButtonColor)>
+            {
+                // Button for cancelling the deletion
+                ["Cancel"] =
+                (
+                    async () => { await confirmationModal.OnHideModalClick(); },
+                    ButtonColor.Secondary
+                ),
+
+                // Button for proceeding with the deletion
+                ["Delete"] =
+                (
+                    async () => { await HandleTaskDeletion(); await confirmationModal.OnHideModalClick(); },
+                    ButtonColor.Danger
+                )
+            };
+
             // Rerender the page
             StateHasChanged();
         }
@@ -466,15 +470,9 @@
         }
     }
 
-    // Upon clicking the delete button for a task, show a confirmation modal
-    private async Task HandleTaskDeletionConfirmation() => await confirmationModal.ShowAsync();
-
     // Handle Task deletion
     private async Task HandleTaskDeletion()
     {
-        // Hide the confirmation modal
-        await confirmationModal.HideAsync();
-
         // Delete the Task
         var result = await _task.DeleteTask(taskId ?? Guid.Empty);
 

@@ -217,7 +217,17 @@
 
     private async Task HandleFuneralCreate()
     {
-        var result = await _funeral.CreateFuneral
+        if (string.IsNullOrEmpty(name))
+        {
+            await OnHideModalClick();
+
+            modalTitle = "Error";
+            modalBody = "The name of the deceased can not by empty. Please enter a name and try again.";
+            await resultModal.OnShowModalClick();
+        }
+        else
+        {
+            var result = await _funeral.CreateFuneral
         (
             new Funeral
             {
@@ -228,27 +238,29 @@
             }
         );
 
-        if (result is not null)
-        {
-            Funerals.Add(result);
+            if (result is not null)
+            {
+                Funerals.Add(result);
 
-            // Refresh the grid
-            if (grid is not null)
-                await grid.RefreshDataAsync();
-            await OnHideModalClick();
+                // Refresh the grid
+                if (grid is not null)
+                    await grid.RefreshDataAsync();
+                await OnHideModalClick();
 
-            modalTitle = "Success";
-            modalBody = "To modify or delete the funeral, go to the \"Info\" tab of the \"Funeral Info\" category.";
-            await resultModal.OnShowModalClick();
+                modalTitle = "Success";
+                modalBody = "To modify or delete the funeral, go to the \"Info\" tab of the \"Funeral Info\" category.";
+                await resultModal.OnShowModalClick();
+            }
+            else
+            {
+                await OnHideModalClick();
+
+                modalTitle = "Error";
+                modalBody = "An error occurred during creation of the Funeral. Please validate your input and try again.";
+                await resultModal.OnShowModalClick();
+            }
         }
-        else
-        {
-            await OnHideModalClick();
-
-            modalTitle = "Error";
-            modalBody = "An error occurred during creation of the Funeral. Please validate your input and try again.";
-            await resultModal.OnShowModalClick();
-        }   
+        
     }
 
     private async Task OnShowModalClick() => await modal.ShowAsync();

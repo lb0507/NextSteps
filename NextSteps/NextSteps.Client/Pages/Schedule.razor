@@ -37,7 +37,7 @@
 
 
 <!-- Screen Message Modal for time conflicts -->
-<DecisionModal @ref="timeConflictModal" 
+<DecisionModal @ref="timeConflictModal"
     TitleText="Time Conflict Detected" 
     TopText="This event conflicts with the following event(s):" 
     MiddleText="@conflictingEvents"
@@ -84,7 +84,7 @@
     private string modalURL = string.Empty;
     private DecisionModal timeConflictModal = default!;
     private string conflictingEvents = string.Empty;
-    private Dictionary<string, Func<Task>> modalButtons = new();
+    private Dictionary<string, (Func<Task>, BlazorBootstrap.ButtonColor)> modalButtons = new();
     #endregion
 
     DateTime CurrentDate = DateTime.Now;
@@ -160,21 +160,31 @@
             }
 
             // Add the buttons to the modal
-            modalButtons = new Dictionary<string, Func<Task>>
+            modalButtons = new Dictionary<string, (Func<Task>, BlazorBootstrap.ButtonColor)>
             {
-                ["Save Event"] = async () => // Button for proceeding with the event creation/update
-                {
-                    // Close the modal
-                    await timeConflictModal.OnHideModalClick(); 
+                // Button for proceeding with the event creation/update
+                ["Save Event"] = 
+                (
+                    async () => 
+                    {
+                        // Close the modal
+                        await timeConflictModal.OnHideModalClick(); 
 
-                    // Create or update the event
-                    if (evnt.EventId == Guid.Empty)
-                        await HandleCreateEvent(evnt);
-                    else
-                        await HandleUpdateEvent(evnt); 
-                },
+                        // Create or update the event
+                        if (evnt.EventId == Guid.Empty)
+                            await HandleCreateEvent(evnt);
+                        else
+                            await HandleUpdateEvent(evnt); 
+                    },
+                    ButtonColor.Primary
+                ),
+
                 // Button for canceling event creation/update; Remove the event since it was automatically added by the component, close the modal, then refresh the scheduler to render the current state
-                ["Cancel"] = async () => { Events.Remove(evnt); await timeConflictModal.OnHideModalClick(); await scheduler.RefreshAsync(); } 
+                ["Cancel"] = 
+                (
+                    async () => { Events.Remove(evnt); await timeConflictModal.OnHideModalClick(); await scheduler.RefreshAsync(); },
+                    ButtonColor.Secondary
+                )
             };
 
             // Display modal to user

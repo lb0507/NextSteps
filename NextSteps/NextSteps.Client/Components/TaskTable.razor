@@ -56,8 +56,10 @@
                 </GridColumn>
 
                 <!-- Status Column -->
-                <GridColumn TItem="NsTask" HeaderText="Status" PropertyName="IsComplete" SortKeySelector="item => item.IsComplete">
-                    @(context.IsComplete ? "Completed" : "Incomplete")
+                <GridColumn TItem="NsTask" HeaderText="Status" PropertyName="IsComplete" SortKeySelector="item => item.IsComplete" >
+                    <span @onclick="async() => await ToggleStatus(context)">
+                        @(context.IsComplete ? "Completed" : "Incomplete")
+                    </span>
                 </GridColumn>
             
             </GridColumns>
@@ -72,7 +74,7 @@
         <Button Color="ButtonColor.Primary" Type="ButtonType.Link" To=@($"/add-task/{Category}")>Add Task</Button>
 
         <!-- Refresh the Grid -->
-        <Button Color="ButtonColor.Secondary" @onclick="@(async () => { if (grid is not null) await grid.RefreshDataAsync(); StateHasChanged(); })">Refresh</Button>
+        <Button Color="ButtonColor.Secondary" @onclick="@Refresh">Refresh</Button> @*@(async () => { if (grid is not null) await grid.RefreshDataAsync(); StateHasChanged(); })*@
 
     </div>
 
@@ -135,5 +137,20 @@
 
         // Rerender the page
         await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ToggleStatus(NsTask togglableTask)
+    {
+        togglableTask.IsComplete = !togglableTask.IsComplete;
+        await _task.UpdateTask(togglableTask);
+        StateHasChanged();
+    }
+
+    private async Task Refresh()
+    {
+        Console.WriteLine(Tasks.Count());
+        if (grid is not null)
+            await grid.RefreshDataAsync(); 
+        StateHasChanged();
     }
 }

@@ -16,20 +16,30 @@
     <!-- Body of the modal with custom text -->
     <BodyTemplate>
         @TopText
-        <br />
-        <br />
+        
+        @if (TopText != string.Empty)
+        {
+            <br />
+            <br />
+        }
+
         @MiddleText
-        <br />
-        <br />
+
+        @if (MiddleText != string.Empty)
+        {
+            <br />
+            <br />
+        }
+
         @BottomText
     </BodyTemplate>
     
     <FooterTemplate>
 
         <!-- The passed in Buttons -->
-        @foreach (var button in Buttons ?? new Dictionary<string, Func<Task>>())
+        @foreach (var button in Buttons ?? new Dictionary<string, (Func<Task>, BlazorBootstrap.ButtonColor)>())
         {
-            <Button Color="ButtonColor.Primary" @onclick="@button.Value">@button.Key</Button>
+            <Button Color="@button.Value.Item2" @onclick="@button.Value.Item1">@button.Key</Button>
         }
       
     </FooterTemplate>
@@ -60,7 +70,7 @@
 
     // The Buttons to be rendered on the modal
     [Parameter]
-    public Dictionary<string, Func<Task>>? Buttons { get; set; }
+    public Dictionary<string, (Func<Task>, BlazorBootstrap.ButtonColor)>? Buttons { get; set; }
 
     private Modal modal = default!;
 

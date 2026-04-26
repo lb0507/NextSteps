@@ -11,7 +11,3 @@ OR
 - Add remaining input fields to Add funeral modal
 
 - Add archiving to funerals
-
-- Fix editContext thing for signin/signout
-
-- See about fixing task number filter

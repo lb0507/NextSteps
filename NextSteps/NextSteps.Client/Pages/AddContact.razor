@@ -89,29 +89,11 @@
 </Modal>
 
 
-<!-- Modal for Confirming the Deletion of the Task -->
-<Modal @ref="confirmationModal" Title="Confirm Deletion?"
-    IsVerticallyCentered
-    Size="ModalSize.Regular">
-
-    <BodyTemplate>
-
-        <div class="modal-body">
-            <span>Please confirm that you would like to delete this contact. This action cannot be undone.</span>
-        </div>
-
-    </BodyTemplate>
-
-    <FooterTemplate>
-
-        <!-- Cancel Button -->
-        <Button Color="ButtonColor.Secondary" @onclick="confirmationModal.HideAsync">Cancel</Button>
-
-        <!-- Delete Button -->
-        <Button Color="ButtonColor.Danger" @onclick="HandleTaskDeletion">Delete</Button>
-
-    </FooterTemplate>
-</Modal>
+<!-- Screen Message Modal for confirming deletion -->
+<DecisionModal @ref="confirmationModal"
+               TitleText="Confirm Deletion?"
+               MiddleText="Please confirm that you would like to delete this contact. This action cannot be undone."
+               Buttons="@modalButtons" />
 
 
 <div class="page-container" style="display: flex; width: 100%;  height: 85vh;">
@@ -290,7 +272,7 @@
             <!-- Delete Contact Button (if not a new contact) -->
             @if (contactId is not null)
             {
-                <Button Color="ButtonColor.Danger" @onclick="HandleContactDeletionConfirmation">Delete Contact</Button>
+                <Button Color="ButtonColor.Danger" @onclick="async () => { await confirmationModal.OnShowModalClick(); }">Delete Contact</Button>
             }
 
             <!-- Save Contact Button -->
@@ -376,10 +358,14 @@
 
     #region[MODAL]
     private ScreenModal modal = default!;
-    private Modal confirmationModal = default!;
+    private DecisionModal confirmationModal = default!;
     private string modalTitle = string.Empty;
     private string modalBody = string.Empty;
     private string modalURL = string.Empty;
+
+    // Buttons container for the deletion confirmation modal
+    private Dictionary<string, (Func<Task>, BlazorBootstrap.ButtonColor)> modalButtons = new();
+
     #endregion
 
     #region [GRID]
@@ -397,7 +383,7 @@
     // On Clicking a row in the table, open a modal displaying the details of the Note
     private async Task OnRowDoubleClick(GridRowEventArgs<Note> args)
     {
-        selectedNote = args.Item;
+        selectedNote = args.Item; 
         await OnShowModalClick(false);
     }
 
@@ -425,6 +411,24 @@
 
                 // Fetch the notes attached to this contact
                 Notes = await _notes.GetNotes(contactId ?? Guid.Empty);
+
+                // Set the buttons for the deletion confirmation modal
+                modalButtons = new Dictionary<string, (Func<Task>, BlazorBootstrap.ButtonColor)>
+                {
+                    // Button for cancelling the deletion
+                    ["Cancel"] =
+                    (
+                        async () => { await confirmationModal.OnHideModalClick(); },
+                        ButtonColor.Secondary
+                    ),
+
+                    // Button for proceeding with the deletion
+                    ["Delete"] =
+                    (
+                        async () => { await HandleContactDeletion(); await confirmationModal.OnHideModalClick(); },
+                        ButtonColor.Danger
+                    )
+                };
 
                 // Refresh the Notes grid
                 if (grid is not null)
@@ -497,15 +501,9 @@
         }
     }
 
-    // On clicking the delete button, show a confirmation modal
-    private async Task HandleContactDeletionConfirmation() => await confirmationModal.ShowAsync();
-
-    // Handle task deletion
-    private async Task HandleTaskDeletion()
+    // Handle contact deletion
+    private async Task HandleContactDeletion()
     {
-        // Hide the confirmation modal
-        await confirmationModal.HideAsync();
-
         // Delete the contact
         var result = await _contact.DeleteContact(contactId ?? Guid.Empty);
 
