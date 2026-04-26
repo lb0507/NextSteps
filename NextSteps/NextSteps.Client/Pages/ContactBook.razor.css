@@ -3,7 +3,7 @@
     display: flex;
     gap: 100px;
     margin-bottom: 20px;
-    margin-left: 15%;
+   
 }
 
 .contact-filter, .vendor-filter{
@@ -11,10 +11,26 @@
 }
 
 select{
-    width: 70%;
-    height: 4vh;
+    width: 70%;   
 }
 
 label{
     padding-right: 10px;
 }
+
+
+::deep .bb-table {
+    table-layout: fixed;
+}
+
+    ::deep .bb-table .name-col {
+        width: 40%;
+    }
+
+    ::deep .bb-table .location-col {
+        width: 40%;
+    }
+
+    ::deep .bb-table .type-col {
+        width: 20%;
+    }

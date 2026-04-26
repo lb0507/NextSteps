@@ -14,7 +14,6 @@
 @using DataLibrary.ServiceLayer.FuneralService;
 @using DataLibrary.ServiceLayer.TaskService;
 @using DataLibrary.ServiceLayer.UserService;
-@using NextSteps.Client.Components
 @using NextSteps.Client.Shared
 
 <!-- Inject Services -->
@@ -34,105 +33,128 @@
 
 <div class="page-container">
 
-    <!-- Page Headers -->
-    <h1>Funeral for @currentFuneral.DeceasedName</h1>
+    <div class="header-row">
 
-    <Button Type="ButtonType.Link" To="/funeral-selection">Back to Funeral Selection</Button>
+        <!-- Page Headers -->
+        <h1>Funeral  for  @currentFuneral.DeceasedName</h1>
+
+        <!-- Button to return to Funeral Selection page -->
+        <Button Type="ButtonType.Link" Style="font-size: 18px;" To="/funeral-selection">Back to Funeral Selection</Button>
+
+    </div>
 
     <!-- Progress Bar for Showing Percentage of Task Completion -->
     <Progress Class="mb-3">
-        <ProgressBar Width="@(taskProgress)" Label="@($"{(int)taskProgress}%")" Type="ProgressType.StripedAndAnimated"/>
+        <ProgressBar Width="@(taskProgress)" Label="@($"{(int)taskProgress}%")" Type="ProgressType.StripedAndAnimated" Color="ProgressColor.Dark" />
     </Progress>
 
     <!-- Category Selection Icon Grid -->
-    <div class="table-container">
+    <div class="grid-container">
+
         <table class="icon-grid">
+
             <tr>
 
                 <td>
-                    <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" Class="mb-4" Style="width:18rem;" @onclick="@(() => _nav.NavigateTo("/Funeral Info"))">
-                        <CardBody>
-                            <Icon Name="IconName.InfoCircleFill" Size="IconSize.x1" Color="IconColor.Light" />
-                            <br>
-                            <Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/Funeral Info">Funeral Info</Button>
-                        </CardBody>
-                    </Card>
+                    <div align ="center">
+                        <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" class="category-card" @onclick="@(() => _nav.NavigateTo("/Funeral Info"))">
+                            <CardBody>
+                                <Icon Name="IconName.InfoCircleFill" Size="IconSize.x1" Color="IconColor.Light" />
+                                <br>
+                                <text class="label"> Funeral Info </text>
+                            </CardBody>
+                        </Card>
+                    </div>
                 </td>
 
                 <td>
-                    <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" Class="mb-4" Style="width:18rem;" @onclick="@(() => _nav.NavigateTo("/scheduler"))">
-                        <CardBody>
-                            <Icon Name="IconName.Box" Size="IconSize.x1" Color="IconColor.Light" />
-                            <br>
-                            <Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/scheduler">Schedule</Button>
-                        </CardBody>
-                    </Card>
+                    <div align ="center">
+                        <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" class="category-card" @onclick="@(() => _nav.NavigateTo("/scheduler"))">
+                            <CardBody>
+                                <Icon Name="IconName.Calendar" Size="IconSize.x1" Color="IconColor.Light" />
+                                <br>
+                                <text class="label"> Schedule </text>
+                            </CardBody>
+                        </Card>
+                    </div>
                 </td>
 
                 <td>
-                    <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" Class="mb-4" Style="width:18rem;" @onclick="@(() => _nav.NavigateTo("/Vendors"))">
-                        <CardBody>
-                            <Icon Name="IconName.Shop" Size="IconSize.x1" Color="IconColor.Light" />
-                            <br>
-                            <Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/Vendors">Vendors</Button>
-                        </CardBody>
-                    </Card>
+                    <div align="center">
+                        <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" class="category-card" @onclick="@(() => _nav.NavigateTo("/Vendors"))">
+                            <CardBody>
+                                <Icon Name="IconName.Shop" Size="IconSize.x1" Color="IconColor.Light" />
+                                <br>
+                                <text class="label"> Vendors </text>
+                            </CardBody>
+                        </Card>
+                    </div> 
                 </td>
                 
             </tr>
             <tr>
                 
                 <td>
-                    <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" Class="mb-4" Style="width:18rem;" @onclick="@(() => _nav.NavigateTo("/Venue"))">
-                        <CardBody>
-                            <Icon Name="IconName.Box" Size="IconSize.x1" Color="IconColor.Light" />
-                            <br>
-                            <Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/Venue">Venue</Button>
-                        </CardBody>
-                    </Card>
+                    <div align="center">
+                        <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" class="category-card" @onclick="@(() => _nav.NavigateTo("/Venue"))">
+                            <CardBody>
+                                <Icon Name="IconName.Building" Size="IconSize.x1" Color="IconColor.Light" />
+                                <br>
+                                <text class="label"> Venue </text>
+                            </CardBody>
+                        </Card>
+                    </div>
                 </td>
                 
                 <td>
-                    <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" Class="mb-4" Style="width:18rem;" @onclick="@(() => _nav.NavigateTo("/Body Preparation"))">
-                        <CardBody>
-                            <Icon Name="IconName.Box" Size="IconSize.x1" Color="IconColor.Light" />
-                            <br>
-                            <Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/Body Preparation">Body Preparation</Button>
-                        </CardBody>
-                    </Card>
+                    <div align="center">
+                        <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" class="category-card" @onclick="@(() => _nav.NavigateTo("/Body Preparation"))">
+                            <CardBody>
+                                <Icon Name="IconName.Person" Size="IconSize.x1" Color="IconColor.Light" />
+                                <br>
+                                <text class="label"> Body Preparation </text>
+                            </CardBody>
+                        </Card>
+                    </div>
                 </td>
 
                 <td>
-                    <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" Class="mb-4" Style="width:18rem;" @onclick="@(() => _nav.NavigateTo("/Post-Service"))">
-                        <CardBody>
-                            <Icon Name="IconName.Box" Size="IconSize.x1" Color="IconColor.Light" />
-                            <br>
-                            <Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/Post-Service">Post-Service</Button>
-                        </CardBody>
-                    </Card>
+                    <div align="center">
+                        <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" class="category-card" @onclick="@(() => _nav.NavigateTo("/Post-Service"))">
+                            <CardBody>
+                                <Icon Name="IconName.DoorClosed" Size="IconSize.x1" Color="IconColor.Light" />
+                                <br>
+                                <text class="label"> Post-Service </text>
+                            </CardBody>
+                        </Card>
+                    </div>
                 </td>
 
             </tr>
             <tr>
 
                 <td>
-                    <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" Class="mb-4" Style="width:18rem;" @onclick="@(() => _nav.NavigateTo("/contactbook"))">
-                        <CardBody>
-                            <Icon Name="IconName.Phone" Size="IconSize.x1" Color="IconColor.Light" />
-                            <br>
-                            <Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/contactbook">Contact Book</Button>
-                        </CardBody>
-                    </Card>
+                    <div align="center">
+                        <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" class="category-card" @onclick="@(() => _nav.NavigateTo("/contactbook"))">
+                            <CardBody>
+                                <Icon Name="IconName.Phone" Size="IconSize.x1" Color="IconColor.Light" />
+                                <br>
+                                <text class="label"> Contact Book </text>
+                            </CardBody>
+                        </Card>
+                    </div>
                 </td>
                 
                 <td>
-                    <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" Class="mb-4" Style="width:18rem;" @onclick="@(() => _nav.NavigateTo("/doc-library"))">
-                        <CardBody>
-                            <Icon Name="IconName.Box" Size="IconSize.x1" Color="IconColor.Light" />
-                            <br>
-                            <Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/doc-library">Document Library</Button>
-                        </CardBody>
-                    </Card>
+                    <div align="center">
+                        <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" class="category-card" @onclick="@(() => _nav.NavigateTo("/doc-library"))">
+                            <CardBody>
+                                <Icon Name="IconName.Book" Size="IconSize.x1" Color="IconColor.Light" />
+                                <br>
+                                <text class="label"> Document Library </text>
+                            </CardBody>
+                        </Card>
+                    </div>
                 </td>
 
             </tr>

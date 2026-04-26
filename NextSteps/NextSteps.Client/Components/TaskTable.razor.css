@@ -1,0 +1,18 @@
+﻿.component-container{
+    padding-top: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.progress-bar{
+    width: 75%;
+    padding-bottom: 5px;
+}
+
+.task-table-container{
+    width: 100%;
+}
+
+

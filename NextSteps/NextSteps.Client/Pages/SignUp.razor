@@ -23,7 +23,7 @@
 @rendermode InteractiveServer
 
 <!-- Override MainLayout from Server and use Client's Custom Layout-->
-@layout CustomLayout
+@layout SignedOutLayout
 
 <!-- Link to the page -->
 @page "/signup"
@@ -31,64 +31,66 @@
 <!-- Screen Message Modal for account creation errors -->
 <ScreenModal @ref="modal" TitleText="@modalTitle" BodyText="@modalBody" />
 
-<div class="page-container">
+<!-- Page Title -->
+<div class="signed-out-title">
 
-    <!-- Page Headers -->
+    <h1 class="title">NextSteps</h1>
+
     <h1>Sign-Up</h1>
 
-    <!-- Sign in Form -->
-    <EditForm EditContext="editContext" OnValidSubmit="HandleRegister" FormName="signInForm">
-        <DataAnnotationsValidator />
-
-        <div>
-            <!-- First Name input field -->
-            <InputText @bind-Value="user.FirstName" class="form-field" placeholder="First Name" />
-            <ValidationMessage For="() => user.FirstName" />
-        </div>
-
-        <div>
-            <!-- Last Name input field -->
-            <InputText @bind-Value="user.LastName" class="form-field" placeholder="Last Name" />
-            <ValidationMessage For="() => user.LastName" />
-        </div>
-
-        <div>
-            <!-- Email input field -->
-            <InputText @bind-Value="user.Email" class="form-field" placeholder="Email" />
-            <ValidationMessage For="() => user.Email" />
-        </div>
-
-        <div>
-            <!-- Password input field-->
-            <InputText @bind-Value="user.Password" class="form-field" type="@pwVisibility" placeholder="Password" />
-            <ValidationMessage For="() => user.Password" />
-        </div>
-
-        <div>
-            <!-- Password input confirmation field-->
-            <InputText @bind-Value="user.ConfirmPassword" class="form-field" type="@pwVisibility" placeholder="Confirm Password" />
-            <ValidationMessage For="() => user.ConfirmPassword" />
-        </div>
-
-        <!--A checkbox; if checked off, the input in the password field is visible-->
-        <div id="chkbx">
-            <input type="checkbox" id="show-password" @onclick="@(() => { showPassword = !showPassword; pwVisibility = showPassword ? "text" : "password"; })">
-            <label for="show-password"> Show </label>
-        </div>
-
-        <div>
-            <!-- Register button -->
-            <Button type="ButtonType.Submit" Color="ButtonColor.Primary">Register</Button>
-            
-            <!-- Clear Form button -->
-            <Button Color="ButtonColor.Secondary" @onclick="() => { user = new(); editContext = new EditContext(user); }">Clear Form</Button>
-        </div>
-    </EditForm>
-
-    <!-- Link to the Sign In page -->
-    <p><i>Already have an account?</i> <a href="/">Sign In</a> </p>
-
 </div>
+
+<!-- Sign in Form -->
+<EditForm EditContext="editContext" OnValidSubmit="HandleRegister" FormName="signInForm" style="width: 500px; margin-top: 10%;">
+    <DataAnnotationsValidator />
+
+    <div class="input-field">
+        <!-- First Name input field -->
+        <InputText @bind-Value="user.FirstName" style="height: 4vh; width: 100%" class="form-field" placeholder="First Name" />
+        <ValidationMessage For="() => user.FirstName" />
+    </div>
+
+    <div class="input-field">
+        <!-- Last Name input field -->
+        <InputText @bind-Value="user.LastName" style="height: 4vh; width: 100%" class="form-field" placeholder="Last Name" />
+        <ValidationMessage For="() => user.LastName" />
+    </div>
+
+    <div class="input-field">
+        <!-- Email input field -->
+        <InputText @bind-Value="user.Email" style="height: 4vh; width: 100%" class="form-field" placeholder="Email" />
+        <ValidationMessage For="() => user.Email" />
+    </div>
+
+    <div class="input-field">
+        <!-- Password input field-->
+        <InputText @bind-Value="user.Password" style="height: 4vh; width: 100%" class="form-field" type="@pwVisibility" placeholder="Password" />
+        <ValidationMessage For="() => user.Password" />
+    </div>
+
+    <div class="input-field">
+        <!-- Password input confirmation field-->
+        <InputText @bind-Value="user.ConfirmPassword" style="height: 4vh; width: 100%" class="form-field" type="@pwVisibility" placeholder="Confirm Password" />
+        <ValidationMessage For="() => user.ConfirmPassword" />
+    </div>
+
+    <!--A checkbox; if checked off, the input in the password field is visible-->
+    <div id="chkbx">
+        <input type="checkbox" id="show-password" @onclick="@(() => { showPassword = !showPassword; pwVisibility = showPassword ? "text" : "password"; })">
+        <label for="show-password"> Show </label>
+    </div>
+
+    <div class="btm-buttons">
+        <!-- Register button -->
+        <Button type="ButtonType.Submit" Style="width: 175px;" Color="ButtonColor.Primary">Register</Button>
+            
+        <!-- Clear Form button -->
+        <Button Color="ButtonColor.Secondary" Style="width: 175px;" @onclick="() => { user = new(); editContext = new EditContext(user); }">Clear Form</Button>
+    </div>
+</EditForm>
+
+<!-- Link to the Sign In page -->
+<p><i>Already have an account?</i> <a href="/">Sign In</a> </p>
 
 
 @code {
@@ -157,13 +159,16 @@
         else
         {
             // Create the user in the database
-            var result = await _user.RegisterUser(new User
-                                                {
-                                                    FirstName = user.FirstName,
-                                                    LastName = user.LastName,
-                                                    Email = user.Email,
-                                                    Password = user.Password
-                                                });
+            var result = await _user.RegisterUser
+            (
+                new User
+                {
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    Email = user.Email,
+                    Password = user.Password
+                }
+            );
 
             if (result is not null)
             {
@@ -173,7 +178,7 @@
                 _nav.NavigateTo("/funeral-selection");
             }
             else
-            {
+            {   // Account registration failed, show the user an error message
                 modalTitle = "Registration Failed";
                 modalBody = "An error occurred during account creation. Please check your credentials and try again.";
                 await modal.OnShowModalClick();

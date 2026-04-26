@@ -20,7 +20,7 @@
 @inject NavigationManager _nav
 
 <!-- Override MainLayout from Server and use Client's Custom Layout-->
-@layout CustomLayout
+@layout SignedOutLayout
 
 <!-- Link to the page -->
 @page "/"
@@ -31,45 +31,50 @@
 <!-- Screen Message Modal for invalid log in prompt -->
 <ScreenModal @ref="modal" TitleText="Login Failed" BodyText="The credentials you have entered are invalid. Please check your email and password and try again." />
 
-<div class="page-container">
+<!-- Page Title -->
+<div class="signed-out-title">
 
-    <!-- Page Headers -->
+    <h1 class="title">NextSteps</h1>
+
     <h1>Sign-In</h1>
 
-    <!-- Sign in Form -->
-    <EditForm EditContext="editContext" OnValidSubmit="@HandleLogin" FormName="signInForm">
-        <DataAnnotationsValidator />
-        <ValidationSummary/>
+</div>
 
-       <div> <!-- Email input field -->
-            <InputText @bind-Value="user.Email" class="form-field" placeholder="Email" />
-                <ValidationMessage For="() => user.Email" />
-       </div>
+<!-- Sign in Form -->
+<EditForm EditContext="editContext" OnValidSubmit="@HandleLogin" FormName="signInForm" style="width: 500px">
+    <DataAnnotationsValidator />
+    <ValidationSummary/>
 
-       <div> <!-- Password input field-->
-            <InputText @bind-Value="user.Password" class="form-field" type="@pwVisibility" placeholder="Password" />
-                <ValidationMessage For="() => user.Password" />
-       </div>
-
-        <div>
-            <!-- Sign In button -->
-            <Button type="ButtonType.Submit" Color="ButtonColor.Primary">Sign In</Button>
-            
-            <!-- Clear Form button -->
-            <Button Color="ButtonColor.Secondary" @onclick="HandleClearForm">Clear Form</Button>
-        </div>
-
-    </EditForm>
-
-    <!-- CheckBox for toggling password visibility -->
-    <div id="chkbx">
-        <input type="checkbox" id="show-password" @onclick="@(() => { showPassword = !showPassword; pwVisibility = showPassword ? "text" : "password"; })">
-        <label for="show-password"> Show </label>
+    <div class="input-field"> <!-- Email input field -->
+        <InputText @bind-Value="user.Email" style="height: 4vh; width: 100%" class="form-field" placeholder="Email" />
+            <ValidationMessage For="() => user.Email" />
     </div>
 
-    <!-- Link to Sign Up Page -->
-    <p><i>Don't have an account?</i> <a href="/signup">Sign Up</a> </p>
-</div>
+    <div class="input-field">
+        <!-- Password input field-->
+        <InputText @bind-Value="user.Password" style="height: 4vh; width: 100%" class="form-field" type="@pwVisibility" placeholder="Password" />
+            <ValidationMessage For="() => user.Password" />
+        <!-- CheckBox for toggling password visibility -->
+        <div id="chkbx">
+            <input type="checkbox" id="show-password" @onclick="@(() => { showPassword = !showPassword; pwVisibility = showPassword ? "text" : "password"; })">
+            <label for="show-password"> Show </label>
+        </div>
+    </div>
+
+    <div class="btm-buttons">
+        <!-- Sign In button -->
+        <Button type="ButtonType.Submit" Color="ButtonColor.Primary">Sign In</Button>
+            
+        <!-- Clear Form button -->
+        <Button Color="ButtonColor.Secondary" @onclick="HandleClearForm">Clear Form</Button>
+    </div>
+
+</EditForm>
+
+
+
+<!-- Link to Sign Up Page -->
+<p><i>Don't have an account?</i> <a href="/signup">Sign Up</a> </p>
 
 @code {
     private EditContext? editContext;

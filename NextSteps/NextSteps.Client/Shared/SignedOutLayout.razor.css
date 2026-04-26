@@ -1,0 +1,27 @@
+﻿main {
+    background-image: url('/Images/white-roses.jpeg');
+}
+.inner-border {
+    background-color: #333333;
+    display: flex;
+    justify-content: center;
+    position: absolute;
+    top: 5%;
+    bottom: 5%;
+    left: 5%;
+    right: 5%;
+    overflow: hidden;
+}
+
+.content {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-top: 50px;
+    gap: 20px;
+    background-color: white;
+    width: 90%;
+    height: 90%;
+}

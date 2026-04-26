@@ -28,9 +28,9 @@
     }
 
 
-input, select {
+input {
     height: 4vh;
-    width: 22%;
+    width: 10%;
 }
 
 td {
@@ -40,4 +40,13 @@ td {
 .modal-body {
     width: 100%;
     padding: 10px;
+}
+
+.search-criteria{
+    padding-right: 1%;
+    padding-left: 1%;
+}
+
+.header-row{
+    padding-bottom: 2vh;
 }

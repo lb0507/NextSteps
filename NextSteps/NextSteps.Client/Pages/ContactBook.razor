@@ -35,11 +35,15 @@
 
 <div class="page-container">
 
-    <!-- Page Headers -->
-    <h1>Contact Book</h1>
+    <div class="header-row">
 
-    <!-- Back button to return to category selection/funeral landing page -->
-    <Button Type="ButtonType.Link" To="/funeral">Back to Category Selection</Button>
+        <!-- Page Headers -->
+        <h1>Contact Book</h1>
+
+        <!-- Back button to return to category selection/funeral landing page -->
+        <Button Type="ButtonType.Link" style="font-size: 18px" To="/funeral">Back to Category Selection</Button>
+
+    </div>
 
     <div class="filter-row">
 
@@ -95,19 +99,19 @@
 
         <GridColumns>
             <!-- Contact Name Column -->
-            <GridColumn TItem="Contact" HeaderText="Name" PropertyName="ContactName" SortKeySelector="item => item.ContactName">
+            <GridColumn TItem="Contact" HeaderText="Name" PropertyName="ContactName" SortKeySelector="item => item.ContactName" Class="name-col">
                 @context.ContactName
             </GridColumn>
 
+            <!-- Location Column -->
+            <GridColumn TItem="Contact" HeaderText="Location" PropertyName="Location" SortKeySelector="item => item.Location" Class="location-col">
+                @context.Location
+            </GridColumn> 
+            
             <!-- Contact Type Column -->
-            <GridColumn TItem="Contact" HeaderText="Type" PropertyName="ContactType" SortKeySelector="item => item.ContactType">
+            <GridColumn TItem="Contact" HeaderText="Type" PropertyName="ContactType" SortKeySelector="item => item.ContactType" Class="type-col text-center">
                 @context.ContactType
             </GridColumn>
-
-            <!-- Location Column -->
-            <GridColumn TItem="Contact" HeaderText="Location" PropertyName="Location" SortKeySelector="item => item.Location">
-                @context.Location
-            </GridColumn>    
             
         </GridColumns>
 
@@ -122,7 +126,7 @@
         <Button Type="ButtonType.Link" Color="ButtonColor.Primary" To="/add-vendors-search">Search for Vendors</Button>
 
         <!-- Refresh the Grid -->
-        <Button Color="ButtonColor.Secondary" @onclick="@(async () => { if (grid is not null) await grid.RefreshDataAsync(); StateHasChanged(); })">Refresh</Button>
+        <Button Color="ButtonColor.Secondary" @onclick="@(async () => { await OnAfterRenderAsync(true); })">Refresh</Button>
 
    </div>
 

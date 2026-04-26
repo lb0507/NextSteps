@@ -1,6 +1,6 @@
 ﻿.radio-buttons{
     display: flex;
-    vertical-align: middle;
+    padding-top: 17px;
     gap: 60px;
 }
 
@@ -37,7 +37,7 @@ input, select {
 }
 
 td {
-    height: 5vh;
+    height: 6vh;
 }
 
 .contact-buttons {

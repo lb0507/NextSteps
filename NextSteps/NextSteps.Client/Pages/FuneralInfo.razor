@@ -42,14 +42,21 @@
 
 <div class="page-container">
 
-    <h3>Funeral Info</h3>
+    <div class="header-row">
 
-    <!-- Back button to return to category selection/funeral landing page -->
-    <Button Type="ButtonType.Link" To="/funeral">Back to Category Selection</Button>
+        <h1>Funeral Info</h1>
+
+        <!-- Back button to return to category selection/funeral landing page -->
+        <Button Type="ButtonType.Link" Style="font-size: 18px;" To="/funeral">Back to Category Selection</Button>
+
+    </div>
 
     <div class="tabs-container">
+
         <Tabs>
+
             <Tab Title="Tasks">
+
                 <Content>
 
                     <!-- Task Table for Basic Funeral Tasks -->
@@ -58,91 +65,102 @@
                         Category="Funeral Info" />
                     
                 </Content>
+
             </Tab>
 
-            <Tab Title="Info">
+            <Tab Title="Info" >
+
                 <Content>
 
                     <div class="info-tab">
 
-                        <table style="width: 98%;">
+                        <div class="left-side">
 
-                            <colgroup>
-                                <col span="1" style="width: 16%" />
-                            </colgroup>
-                            <colgroup>
-                                <col span="1" style="width: 84%" />
-                            </colgroup>
+                            <table style="width: 98%;">
 
-                            <!-- NAME OF DECEASED -->
-                            <tr>
-                                <td style="display: flex; vertical-align: top;">
-                                    <label>Name of Deceased</label>
-                                </td>
+                                <colgroup>
+                                    <col span="1" style="width: 30%" />
+                                </colgroup>
+                                <colgroup>
+                                    <col span="1" style="width: 70%" />
+                                </colgroup>
 
-                                <td>
-                                    <!-- Input field for the Name of Deceased -->
-                                    <input type="text"
-                                           @bind=@(currentFuneral.DeceasedName) />
-                                </td>
-                            </tr>
+                                <!-- NAME OF DECEASED -->
+                                <tr>
+                                    <td style="display: flex; vertical-align: top;">
+                                        <label>Name of Deceased</label>
+                                    </td>
 
-                            <!-- PLANNED DATE OF FUNERAL SERVICE -->
-                            <tr>
-                                <td>
-                                    <label>Date of Service</label>
-                                </td>
+                                    <td>
+                                        <!-- Input field for the Name of Deceased -->
+                                        <input type="text"
+                                               style="width: 95%; height: 4vh;"
+                                               placeholder="Enter the name of the deceased..."
+                                               @bind=@(currentFuneral.DeceasedName) />
+                                    </td>
+                                </tr>
 
-                                <td>
-                                    <!-- Time Picker Input for the Date of Funeral Service -->
-                                    <input type="date"
-                                           @bind="@currentFuneral.DateOfService"
-                                           ShowSeconds="false" />
-                                </td>
-                            </tr>
+                                <!-- PLANNED LOCATION OF FUNERAL SERVICE -->
+                                <tr>
+                                    <td>
+                                        <label>Location of Service</label>
+                                    </td>
 
-                            <!-- PLANNED LOCATION OF FUNERAL SERVICE -->
-                            <tr>
-                                <td>
-                                    <label>Location of Service</label>
-                                </td>
+                                    <td>
+                                        <!-- Input field for Location of the Funeral Service -->
+                                        <input type="text"
+                                               style="width: 95%; height: 4vh;"
+                                               placeholder="Enter the location of the service..."
+                                               @bind=@(currentFuneral.Location) />
+                                    </td>
+                                </tr>
 
-                                <td>
-                                    <!-- Input field for Location of the Funeral Service -->
-                                    <input type="text"
-                                            @bind=@(currentFuneral.Location) />
-                                </td>
-                            </tr>
+                                <!-- PLANNED DATE OF FUNERAL SERVICE -->
+                                <tr>
+                                    <td>
+                                        <label>Date of Service</label>
+                                    </td>
 
-                            <!-- OBITUARY FOR FUNERAL SERVICE -->
-                            <tr>
-                                <td>
-                                    <label>Obituary</label>
-                                </td>
+                                    <td>
+                                        <!-- Time Picker Input for the Date of Funeral Service -->
+                                        <input type="datetime-local"
+                                               style="width: 40%; height: 4vh;"
+                                               @bind="@currentFuneral.DateOfService"
+                                               ShowSeconds="false" />
+                                    </td>
+                                </tr>
 
-                                <td>
-                                    <!-- Input field for Location of the Funeral Service -->
-                                    <input type="text"
-                                           @bind=@(currentFuneral.Obituary) />
-                                </td>
-                            </tr>
-
-                        </table>
-
-                        <div class="buttons">
-
-                            <!-- Delete Funeral Button -->
-                            <Button Color="ButtonColor.Danger" @onclick="async () => { await confirmationModal.OnShowModalClick();}">Delete this Funeral</Button>
-            
-                            <!-- Archive/Unarchive Funeral Button -->
-                            <Button Color="ButtonColor.Secondary" @onclick="HandleArchive">@(currentFuneral.IsArchived ? "Unarchive" : "Archive")</Button>
-
-                            <!-- Save Funeral Info Button -->
-                            <Button Color="ButtonColor.Primary" @onclick="HandleSave">Save Funeral Info</Button>
+                            </table>
 
                         </div>
+
+                        <div class="right-side">
+
+                            <!-- OBITUARY FOR FUNERAL SERVICE -->
+                            <text id="ob-label">Obituary</text>
+
+                            <!-- Input field for Location of the Funeral Service -->
+                            <textarea type="text"
+                                      id="ob-field"
+                                      placeholder="Use this space to write the obituary..."
+                                      @bind=@(currentFuneral.Obituary) />                         
+                        </div>
+
                     </div>
 
+                    <div class="buttons">
+
+                        <!-- Delete Funeral Button -->
+                        <Button Color="ButtonColor.Danger" @onclick="async () => { await confirmationModal.OnShowModalClick(); }">Delete this Funeral</Button>
+
+                        <!-- Archive/Unarchive Funeral Button -->
+                        <Button Color="ButtonColor.Secondary" @onclick="HandleArchive">@(currentFuneral.IsArchived ? "Unarchive" : "Archive")</Button>
+
+                        <!-- Save Funeral Info Button -->
+                        <Button Color="ButtonColor.Primary" @onclick="HandleSave">Save Funeral Info</Button>
+
+                    </div>
+                    
                 </Content>
 
             </Tab>
@@ -158,6 +176,8 @@
     private Funeral currentFuneral = new();
 
     private User? currentUser;
+
+    private bool hasRendered = false;
 
     #region[MODAL]
     private ScreenModal modal = default!;
@@ -233,6 +253,7 @@
             // Display success message to user and redirect them back to the category page
             modalTitle = "Save Successful";
             modalBody = "The funeral info has been saved successfully.";
+            modalURL = "/funeral";
             await modal.OnShowModalClick();
         }
         else
@@ -270,9 +291,13 @@
             // Display success message to user and redirect them back to the category page
             modalTitle = "Success";
             if (result.IsArchived)
+            {
                 modalBody = "The funeral has been archived.";
+                modalURL = $"/funeral-selection";
+            }
             else
                 modalBody = "The funeral has been unarchived.";
+
             await modal.OnShowModalClick();
         }
         else

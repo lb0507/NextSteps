@@ -1,0 +1,40 @@
+﻿.outside {
+    background-image: url('/Images/white-roses.jpeg');
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+}
+
+.inside {
+    background-color: white;
+    position: absolute;
+    top: 10%;
+    bottom: 2%;
+    right: 2%;
+    left: 2%;
+    border: 5px solid #333333;
+    border-top: none;
+}
+
+.top-bar {
+    background-color: #333333;
+    display: flex;
+    justify-content: space-between;
+    align-content: center;
+    position: absolute;
+    padding-right: 20px;
+    padding-left: 20px;
+    top: 2%;
+    right: 2%;
+    left: 2%;
+    height: 10vh;
+}
+
+.title {
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    color: white;
+    font-size: 40px;
+    margin-top: 5px;
+}

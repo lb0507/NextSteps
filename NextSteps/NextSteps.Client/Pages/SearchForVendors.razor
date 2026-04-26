@@ -42,15 +42,23 @@
 
     <div class="search-criteria">
 
-        <h3>Add Vendors by Search</h3>
+        <div class="header-row">
+
+            <!-- Page Title -->
+            <h1>Add Vendors by Search</h1>
+
+            <!-- Back button to return to Contact Book -->
+            <Button Type="ButtonType.Link" Style="font-size: 18px;" To="/contactbook">Back to Contact Book</Button>
+
+        </div>       
         
-        <table style="width: 98%;">
+        <table style="width: 100%;">
 
             <colgroup>
-                <col span="1" style="width: 30%" />
+                <col span="1" style="width: 15%" />
             </colgroup>
             <colgroup>
-                <col span="1" style="width: 70%" />
+                <col span="1" style="width: 85%" />
             </colgroup>
 
             <!-- CONTACT TYPE -->
@@ -61,7 +69,7 @@
 
                 <td>
                     <!-- Selection menu for the Task Status -->
-                    <InputSelect style="height: 4vh; width: 50%" @bind-Value="@vendorType">
+                    <InputSelect style="width: 10%" @bind-Value="@vendorType">
 
                         <option disabled selected>Select a Vendor Type...</option>
                         @foreach (var type in VendorTypes)
@@ -86,7 +94,7 @@
                         <input type="text"
                                @bind="customVendorType"
                                placeholder="Enter Vendor Type Here..."
-                               style="width:50%" />
+                               style="width: 30%" />
                     </td>
                 </tr>
             }
@@ -100,7 +108,7 @@
                 <td>
                     <input type="text"
                            @bind="location"
-                           style="width:50%" />
+                           style="width: 30%"/>
                 </td>
             </tr>
 
@@ -113,7 +121,7 @@
                 <td>
                     <input type="number"
                            @bind="radius"
-                           style="width:50%" />
+                            />
                 </td>
             </tr>
 
@@ -128,7 +136,7 @@
                            @bind="numLimit"
                            max="100"
                            min="1"
-                           style="width:50%" />
+                            />
                 </td>
             </tr>
 
@@ -136,9 +144,7 @@
 
         <div class="buttons">
 
-            <Button Type="ButtonType.Link" Color="ButtonColor.Secondary" To="/contactbook">Back</Button>
-
-            <Button Color="ButtonColor.Primary" @onclick="HandleSearch">Search</Button>
+            <Button Color="ButtonColor.Secondary" @onclick="HandleSearch">Search</Button>
 
             @if (Contacts.Count() != 0)
             {
@@ -158,7 +164,7 @@
                   Class="table table-hover table-bordered table-striped"
                   DataProvider="ContactsDataProvider"
                   AllowPaging="true"
-                  PageSize="10"
+                  PageSize="@(vendorType == "Other" ? 7 : 8)"
                   Responsive="true"
                   AllowSelection="true"
                   SelectedItems="selectedContacts"

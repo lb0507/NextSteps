@@ -14,6 +14,7 @@ namespace DataLibrary.Models
         public Guid UserId { get; set; }
         public bool IsDeleted { get; set; } = false;
         public string? Obituary { get; set; }
-        public bool IsArchived = false;
+
+        public bool IsArchived { get; set; } = false;
     }
 }

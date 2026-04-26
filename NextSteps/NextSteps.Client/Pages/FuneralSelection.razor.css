@@ -1,0 +1,26 @@
+﻿.radio-buttons {
+    display: flex;
+    padding-top: 17px;
+    gap: 20px;
+}
+
+.modal-cell{
+    height: 4vh;
+}
+
+
+::deep .bb-table {
+    table-layout: fixed;
+}
+
+    ::deep .bb-table .name-col {
+        width: 49%;
+    }
+
+    ::deep .bb-table .location-col {
+        width: 30%;
+    }
+
+    ::deep .bb-table .date-col {
+        width: 21%;
+    }

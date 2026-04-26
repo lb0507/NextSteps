@@ -1,15 +1,74 @@
-html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    background-color: #F2F2F2;
+
+.nav-link {
+    color: dimgray;
 }
 
-h1 {
+.nav-tabs .nav-item.show .nav-link, .nav-tabs {
+    --bs-nav-tabs-border-color: dimgray;
+}
+
+    .nav-tabs .nav-item.show .nav-link, .nav-tabs .nav-link.active {
+        border-top-color: dimgray;
+        border-right-color: dimgray;
+        border-bottom-color: none;
+        border-left-color: dimgray;
+    }
+
+.active > .page-link, .page-link.active {
+    background-color: dimgray;
+    border-color: dimgray;
+}
+
+html, body {
     font-family: 'Sans Serif Collection', Onyx;
+    background-color: #F2F2F2;
+    word-spacing: 3px;
+    overflow: hidden;
+}
+
+h1, h3 {
+    font-family: Georgia, 'Times New Roman', Times, serif;
     color: #333333;
+    word-spacing: 5px;
+}
+
+.signed-out-title{
+    position: absolute;
+    text-align: center;
+    top: 15%;
+}
+
+.header-row {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 1vh;
+    padding-bottom: 3vh;
+}
+
+.buttons {
+    display: flex;
+    gap: 15px;
+    position: absolute;
+    bottom: 2%;
+    right: 1%;
+}
+
+input{
+    word-spacing: 2px;
+}
+
+select {
+    height: 4.5vh;
+    word-spacing: 2px;
 }
 
 a, .btn-link {
     color: #006bb7;
+}
+
+.btn{
+    word-spacing: 4px;
+    min-width: 100px;
 }
 
 .btn-primary {

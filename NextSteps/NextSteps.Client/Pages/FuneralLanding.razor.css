@@ -1,7 +1,22 @@
-﻿.icon-grid {
+﻿.grid-container {
     width: 100%;
 }
 
-tr{
+.icon-grid {
+    width: 100%;
+    margin-top: 6vh;
+}
+
+tr {
     height: 20vh;
+}
+
+::deep .card {
+    width: 18rem;
+    height: 8.5rem;
+    cursor: pointer;
+}
+
+.label{
+    font-size: 18px;
 }

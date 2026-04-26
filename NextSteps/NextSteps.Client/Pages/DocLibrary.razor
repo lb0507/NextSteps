@@ -37,14 +37,21 @@
 
 <div class="page-container">
 
-    <h3>Document Library</h3>
+    <div class="header-row">
 
-    <!-- Back button to return to category selection/funeral landing page -->
-    <Button Type="ButtonType.Link" To="/funeral">Back to Category Selection</Button>
+        <h1>Document Library</h1>
+
+        <!-- Back button to return to category selection/funeral landing page -->
+        <Button Type="ButtonType.Link" Style="font-size: 18px" To="/funeral">Back to Category Selection</Button>
+
+    </div>
 
     <div class="tabs-container">
+
         <Tabs>
+
             <Tab Title="Templates">
+
                 <Content>
 
                     <div class="content-container">
@@ -73,7 +80,7 @@
                                     </GridColumn>
 
                                     <!-- Download Button Column -->
-                                    <GridColumn TItem="BlobItem" HeaderText="Download" PropertyName="Name" SortKeySelector="item => item.Name" Filterable=false Sortable=false>
+                                    <GridColumn TItem="BlobItem" HeaderText="" PropertyName="" SortKeySelector="item => item.Name" Filterable=false Sortable=false Class=" text-center">
                                         <Button @onclick="@(async() => await _js.InvokeVoidAsync("downloadDocument", context.Name, DocData[context.Name]))">Download</Button>
                                     </GridColumn>
 

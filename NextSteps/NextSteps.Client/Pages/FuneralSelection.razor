@@ -33,7 +33,7 @@
 <Preload LoadingText="" />
 
 <!-- Modal for Adding new Funerals -->
-<Modal @ref="modal" Title="Add New Funeral Service">
+<Modal @ref="modal" Title="Add New Funeral Service" IsVerticallyCentered>
     <BodyTemplate>
         
         <table style="width: 100%">
@@ -46,34 +46,34 @@
             </colgroup>
 
             <tr>
-                <td>
+                <td class="modal-cell">
                     <label>
                         Name of Deceased:
                     </label>
                 </td>
-                <td>
+                <td class="modal-cell">
                     <input @bind="name" style="width: 90%"/>
                 </td>
             </tr>
             <tr>
-                <td>
+                <td class="modal-cell">
                     <label>
                         Date of Service:
                     </label>
                 </td>
-                <td>
+                <td class="modal-cell">
                     <input type="date"
                            @bind="@date"
                            ShowSeconds="false" />
                 </td>
             </tr>
             <tr>
-                <td>
+                <td class="modal-cell">
                     <label>
                         Location of Service:
                     </label>
                 </td>
-                <td>
+                <td class="modal-cell"
                     <input @bind="location" style="width: 90%" />
                 </td>
             </tr>
@@ -92,16 +92,19 @@
 
 <div class="page-container">
 
-    <!-- Page Headers -->
-    <h1>Funeral Selection</h1>
+    <div class="header-row">
+        <!-- Page Headers -->
+        <h1>Funeral Selection</h1>
 
-    <!-- Radio buttons for choosing which funerals to view -->
-    <div class="radio-buttons">
-        <InputRadioGroup Value="showArchived" ValueExpression="() => showArchived" ValueChanged="OnSelectionChanged" TValue="bool">
-            <div class="radio-option"> <InputRadio Value="false" /> Active </div>
-            <div class="radio-option"> <InputRadio Value="true" /> Archived </div>
-        </InputRadioGroup>
-    </div>
+        <!-- Radio buttons for choosing which funerals to view -->
+        <div class="radio-buttons">
+            <label style="font-size: 18px; margin-right: 20px">Funeral View:</label>
+            <InputRadioGroup Value="showArchived" ValueExpression="() => showArchived" ValueChanged="OnSelectionChanged" TValue="bool">
+                <div class="radio-option"> <InputRadio Value="false" /> Active </div>
+                <div class="radio-option"> <InputRadio Value="true" /> Archived </div>
+            </InputRadioGroup>
+        </div>
+    </div>  
              
     <!-- Table of Funeral objects -->
     <Grid TItem="Funeral"
@@ -109,7 +112,6 @@
             AllowFiltering="true"
             AllowPaging="true"
             AllowSorting="true"
-            AllowDetailView="true"
             AllowRowClick="true"
             OnRowDoubleClick="OnRowDoubleClick"
             Class="table table-hover table-bordered table-striped"
@@ -119,18 +121,18 @@
 
         <GridColumns>
             <!-- Name of Deceased Column -->
-            <GridColumn TItem="Funeral" HeaderText="Deceased" PropertyName="DeceasedName" SortKeySelector="item => item.DeceasedName">
+            <GridColumn TItem="Funeral" HeaderText="Deceased" PropertyName="DeceasedName" SortKeySelector="item => item.DeceasedName" Class="name-col">
                 @context.DeceasedName
             </GridColumn>
 
             <!-- Location Column -->
-            <GridColumn TItem="Funeral" HeaderText="Location" PropertyName="Location" SortKeySelector="item => item.Location">
+            <GridColumn TItem="Funeral" HeaderText="Location" PropertyName="Location" SortKeySelector="item => item.Location" Class="location-col">
                 @context.Location
             </GridColumn>
 
             <!-- Date of Service Column -->
-            <GridColumn TItem="Funeral" HeaderText="Service Date" PropertyName="DateOfService" SortKeySelector="item => item.DateOfService">
-                @(context.DateOfService?.ToString("dd MMM yyyy") ?? string.Empty)
+            <GridColumn TItem="Funeral" HeaderText="Service Date" PropertyName="DateOfService" SortKeySelector="item => item.DateOfService" Class="date-col text-center" >
+                @(context.DateOfService?.ToString("dd MMM yyyy h:mm tt") ?? string.Empty)
             </GridColumn>
 
         </GridColumns>
@@ -146,7 +148,7 @@
         }
 
         <!-- Refresh the Grid -->
-        <Button Color="ButtonColor.Secondary" @onclick="@(async () => { if (grid is not null) await grid.RefreshDataAsync(); StateHasChanged(); })">Refresh</Button>
+        <Button Color="ButtonColor.Secondary" @onclick="@(async () => { await OnAfterRenderAsync(true); })">Refresh</Button>
 
     </div>
 

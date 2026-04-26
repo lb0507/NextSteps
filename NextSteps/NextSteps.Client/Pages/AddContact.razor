@@ -104,21 +104,21 @@
         <!-- Page Title -->
         @if (contactId is null)
         {
-            <h3>Add Contact</h3>
+            <h1>Add Contact</h1>
         }
         else
         {
-            <h3>Contact Details</h3>
+            <h1>Contact Details</h1>
         }
 
         <!-- Table for formatting the input fields for Contact Details -->
-        <table style="width: 98%;">
+        <table style="width: 98%; margin-top: 4vh;">
 
             <colgroup>
-                <col span="1" style="width: 30%" />
+                <col span="1" style="width: 35%" />
             </colgroup>
             <colgroup>
-                <col span="1" style="width: 70%" />
+                <col span="1" style="width: 65%" />
             </colgroup>
 
             <!-- CONTACT NAME -->
@@ -143,7 +143,7 @@
 
                 <td>
                     <!-- Selection menu for the Contact Type -->
-                    <InputSelect style="height: 4vh; width: 50%" @bind-Value="@contact.ContactType">
+                    <InputSelect style="width: 50%" @bind-Value="@contact.ContactType">
 
                         @if (contactId is null)
                         {
@@ -168,7 +168,7 @@
 
                     <td>
                         <!-- Selection menu for the Vendor Type -->
-                        <InputSelect style="height: 4vh; width: 50%" @bind-Value="@contact.VendorType">
+                        <InputSelect style="width: 50%" @bind-Value="@contact.VendorType">
 
                             @if (contactId is null)
                             {
@@ -456,6 +456,13 @@
         {
             modalTitle = "Error";
             modalBody = "Contact type cannot be empty. Please enter a type and try again.";
+            await modal.OnShowModalClick();
+            return;
+        }
+        else if (contact.ContactEmail is not null && !contact.ContactEmail.Contains("@"))
+        {
+            modalTitle = "Error";
+            modalBody = "Contact email is in incorrect format. Please validate the email address and try again.";
             await modal.OnShowModalClick();
             return;
         }

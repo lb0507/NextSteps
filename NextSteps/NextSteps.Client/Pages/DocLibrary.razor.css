@@ -14,11 +14,14 @@
 
 .viewer-container {
     width: 60%;
+    height: 65vh;
     overflow: auto;
 }
 
 .right-side-text{
     text-align: center;
+    margin-top: 10vh;
+    color: grey;
 }
 
 .page-container {

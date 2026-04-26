@@ -19,66 +19,74 @@
 <!-- Preload Spinner -->
 <Preload LoadingText=""/>
 
-<!-- Progress Bar for Showing Percentage of Task Completion -->
-<Progress Class="mb-3">
-    <ProgressBar Width="@((completedTasks / allTasks)*100)" Label="@($"{(int)((completedTasks / allTasks)*100)}%")" Type="ProgressType.StripedAndAnimated" />
-</Progress>
+<div class="component-container">
 
-<div class="task-table-container">
+    <div class="progress-bar">
 
-    <!-- Task Table Container -->
-    <div class="table-container">
+        <!-- Progress Bar for Showing Percentage of Task Completion -->
+        <Progress Class="mb-3">
+            <ProgressBar @ref="progressBar" Width="@((completedTasks / allTasks) * 100)" Label="@($"{(int)((completedTasks / allTasks) * 100)}%")" Type="ProgressType.StripedAndAnimated" Color="ProgressColor.Dark" />
+        </Progress>
 
-        <!-- Table of Task objects -->
-        <Grid TItem="NsTask"
-              @ref="grid"
-              AllowFiltering="true"
-              AllowPaging="true"
-              AllowSorting="true"
-              AllowRowClick="true"
-              OnRowDoubleClick="OnRowDoubleClick"
-              Class="table table-hover table-bordered table-striped"
-              DataProvider="TasksDataProvider"
-              PageSize="10"
-              Responsive="true"
-              RowKeySelector="(task) => task.TaskId"
-              >
+    </div>   
 
-            <GridColumns>
-                <!-- Task Number Column -->
-                <GridColumn TItem="NsTask" HeaderText="Task Number" PropertyName="TaskNumber" SortKeySelector="item => item.TaskNumber">
-                    @context.TaskNumber
-                </GridColumn>
+    <div class="task-table-container">
 
-                <!-- Description Column -->
-                <GridColumn TItem="NsTask" HeaderText="Description" PropertyName="Description" SortKeySelector="item => item.Description">
-                    @context.Description
-                </GridColumn>
+        <!-- Task Table Container -->
+        <div class="table-container">
 
-                <!-- Status Column -->
-                <GridColumn TItem="NsTask" HeaderText="Status" PropertyName="IsComplete" SortKeySelector="item => item.IsComplete" >
-                    <span @onclick="async() => await ToggleStatus(context)">
-                        @(context.IsComplete ? "Completed" : "Incomplete")
-                    </span>
-                </GridColumn>
-            
-            </GridColumns>
+            <!-- Table of Task objects -->
+            <Grid TItem="NsTask"
+                  @ref="grid"
+                  AllowFiltering="true"
+                  AllowPaging="true"
+                  AllowSorting="true"
+                  AllowRowClick="true"
+                  OnRowDoubleClick="OnRowDoubleClick"
+                  Class="table table-hover table-bordered table-striped"
+                  DataProvider="TasksDataProvider"
+                  PageSize="10"
+                  Responsive="true"
+                  RowKeySelector="(task) => task.TaskId">
 
-        </Grid>
+                <GridColumns>
+                    <!-- Task Number Column -->
+                    <GridColumn TItem="NsTask" HeaderText="Task Number" PropertyName="TaskNumber" SortKeySelector="item => item.TaskNumber">
+                        @context.TaskNumber
+                    </GridColumn>
 
-    </div>
+                    <!-- Description Column -->
+                    <GridColumn TItem="NsTask" HeaderText="Description" PropertyName="Description" SortKeySelector="item => item.Description">
+                        @context.Description
+                    </GridColumn>
 
-    <div class="buttons">
+                    <!-- Status Column -->
+                    <GridColumn TItem="NsTask" HeaderText="Status" PropertyName="IsComplete" SortKeySelector="item => item.IsComplete" Class="text-center">
+                        <span @onclick="async () => { await ToggleStatus(context); }">
+                            @(context.IsComplete ? "Completed" : "Incomplete")
+                        </span>
+                    </GridColumn>
 
-        <!-- Add a New Task -->
-        <Button Color="ButtonColor.Primary" Type="ButtonType.Link" To=@($"/add-task/{Category}")>Add Task</Button>
+                </GridColumns>
 
-        <!-- Refresh the Grid -->
-        <Button Color="ButtonColor.Secondary" @onclick="@Refresh">Refresh</Button> @*@(async () => { if (grid is not null) await grid.RefreshDataAsync(); StateHasChanged(); })*@
+            </Grid>
+
+        </div>
+
+        <div class="buttons">
+
+            <!-- Add a New Task -->
+            <Button Color="ButtonColor.Primary" Type="ButtonType.Link" To=@($"/add-task/{Category}")>Add Task</Button>
+
+            <!-- Refresh the Grid -->
+            <Button Color="ButtonColor.Secondary" @onclick="@OnParametersSetAsync">Refresh</Button>
+
+        </div>
 
     </div>
 
 </div>
+
 
 @code {
     [Inject]
@@ -89,6 +97,8 @@
 
     [Parameter, EditorRequired]
     public string Category { get; set; }
+
+    ProgressBar progressBar = default!;
 
     private double completedTasks = 0;
     private double allTasks = 1;
@@ -118,19 +128,14 @@
         // Fetch the tasks for this category and Funeral
         Tasks = await _task.GetTasksByCategory(FuneralId, Category);
 
+        CountTasks();
+
         // A short pause to ensure the task data loads before the grid is refreshed
         await Task.Delay(400);
 
         // Refresh the grid
         if (grid is not null)
             await grid.RefreshDataAsync();
-
-        if (Tasks.Count() != 0)
-        {
-            // If there are tasks, get the number of completed tasks and number of all tasks
-            completedTasks = Tasks.Where(t => t.IsComplete == true).Count();
-            allTasks = Tasks.Count();
-        }
 
         // Hide loading spinner
         PreloadService.Hide();
@@ -142,15 +147,18 @@
     private async Task ToggleStatus(NsTask togglableTask)
     {
         togglableTask.IsComplete = !togglableTask.IsComplete;
+        CountTasks(); 
         await _task.UpdateTask(togglableTask);
         StateHasChanged();
     }
 
-    private async Task Refresh()
+    private void CountTasks()
     {
-        Console.WriteLine(Tasks.Count());
-        if (grid is not null)
-            await grid.RefreshDataAsync(); 
-        StateHasChanged();
+        if (Tasks.Count() != 0)
+        {
+            // If there are tasks, get the number of completed tasks and number of all tasks
+            completedTasks = Tasks.Where(t => t.IsComplete == true).Count();
+            allTasks = Tasks.Count();
+        }        
     }
 }
