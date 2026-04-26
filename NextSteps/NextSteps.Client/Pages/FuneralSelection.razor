@@ -95,20 +95,27 @@
     <!-- Page Headers -->
     <h1>Funeral Selection</h1>
 
+    <!-- Radio buttons for choosing which funerals to view -->
+    <div class="radio-buttons">
+        <InputRadioGroup Value="showArchived" ValueExpression="() => showArchived" ValueChanged="OnSelectionChanged" TValue="bool">
+            <div class="radio-option"> <InputRadio Value="false" /> Active </div>
+            <div class="radio-option"> <InputRadio Value="true" /> Archived </div>
+        </InputRadioGroup>
+    </div>
+             
     <!-- Table of Funeral objects -->
     <Grid TItem="Funeral"
-          @ref="grid"
-          AllowFiltering="true"
-          AllowPaging="true"
-          AllowSorting="true"
-          AllowDetailView="true"
-          AllowRowClick="true"
-          OnRowDoubleClick="OnRowDoubleClick"
-          Class="table table-hover table-bordered table-striped"
-          DataProvider="FuneralsDataProvider"
-          PageSize="10"
-          Responsive="true"
-          SelectionMode="GridSelectionMode.Multiple">
+            @ref="grid"
+            AllowFiltering="true"
+            AllowPaging="true"
+            AllowSorting="true"
+            AllowDetailView="true"
+            AllowRowClick="true"
+            OnRowDoubleClick="OnRowDoubleClick"
+            Class="table table-hover table-bordered table-striped"
+            DataProvider="FuneralsDataProvider"
+            PageSize="10"
+            Responsive="true">
 
         <GridColumns>
             <!-- Name of Deceased Column -->
@@ -124,25 +131,34 @@
             <!-- Date of Service Column -->
             <GridColumn TItem="Funeral" HeaderText="Service Date" PropertyName="DateOfService" SortKeySelector="item => item.DateOfService">
                 @(context.DateOfService?.ToString("dd MMM yyyy") ?? string.Empty)
-            </GridColumn>     
-            
+            </GridColumn>
+
         </GridColumns>
 
     </Grid>
 
-    <!-- Add a New Funeral -->
-    <Button Color="ButtonColor.Primary" @onclick="OnShowModalClick">Add Funeral</Button>
+    <div class="buttons">
 
-    <!-- Refresh the Grid -->
-    <Button Color="ButtonColor.Secondary" @onclick="@(async () => { if (grid is not null) await grid.RefreshDataAsync(); StateHasChanged(); })">Refresh</Button>
+        @if (showArchived == false)
+        {
+            <!-- Add a New Funeral -->
+            <Button Color="ButtonColor.Primary" @onclick="OnShowModalClick">Add Funeral</Button>
+        }
+
+        <!-- Refresh the Grid -->
+        <Button Color="ButtonColor.Secondary" @onclick="@(async () => { if (grid is not null) await grid.RefreshDataAsync(); StateHasChanged(); })">Refresh</Button>
+
+    </div>
 
 </div>
 
 @code {
+
     [Inject]
     protected PreloadService PreloadService { get; set; } = default!;
 
     private List<Funeral> Funerals = new();
+    private List<Funeral> Archives = new();
 
     private User? currentUser;
 
@@ -158,21 +174,16 @@
     private DateTime? date;
     private string? location;
 
+    private bool showArchived = false;
+
     #region [GRID]
 
     private BlazorBootstrap.Grid<Funeral>? grid;
 
-    private HashSet<Funeral> selectedFunerals = new();
+    private async Task<GridDataProviderResult<Funeral>> FuneralsDataProvider(GridDataProviderRequest<Funeral> request) => await Task.FromResult(request.ApplyTo(Funerals.Where(f => f.IsArchived == showArchived)));
 
-    private async Task<GridDataProviderResult<Funeral>> FuneralsDataProvider(GridDataProviderRequest<Funeral> request) => await Task.FromResult(request.ApplyTo(Funerals));
-
-    private Task OnSelectedItemsChanged(HashSet<Funeral> funerals)
-    {
-        selectedFunerals = funerals is not null && funerals.Any() ? funerals : new();
-        return Task.CompletedTask;
-    }
-
-    private async Task OnRowDoubleClick(GridRowEventArgs<Funeral> args)
+    private async Task OnRowDoubleClick(GridRowEventArgs
+    <Funeral> args)
     {
         await _storage.SetInStorage("currentFuneral", args.Item);
 
@@ -212,11 +223,12 @@
                 PreloadService.Hide();
             }
         }
-
     }
 
+    // Handle creation of the funeral event
     private async Task HandleFuneralCreate()
     {
+        // Check that a name has been entered for the deceased
         if (string.IsNullOrEmpty(name))
         {
             await OnHideModalClick();
@@ -227,19 +239,21 @@
         }
         else
         {
+            // Create the funeral
             var result = await _funeral.CreateFuneral
-        (
-            new Funeral
-            {
-                DeceasedName = name,
-                UserId = currentUser?.UserId ?? Guid.Empty,
-                DateOfService = date,
-                Location = location
-            }
-        );
+            (
+                new Funeral
+                {
+                    DeceasedName = name,
+                    UserId = currentUser?.UserId ?? Guid.Empty,
+                    DateOfService = date,
+                    Location = location
+                }
+            );
 
             if (result is not null)
             {
+                // The funeral creation was successful, add it to the table
                 Funerals.Add(result);
 
                 // Refresh the grid
@@ -247,12 +261,14 @@
                     await grid.RefreshDataAsync();
                 await OnHideModalClick();
 
+                // Show the user a modal to inform them of how they can modify/delete the funeral
                 modalTitle = "Success";
                 modalBody = "To modify or delete the funeral, go to the \"Info\" tab of the \"Funeral Info\" category.";
                 await resultModal.OnShowModalClick();
             }
             else
             {
+                // There was an error during funeral creation, inform the user
                 await OnHideModalClick();
 
                 modalTitle = "Error";
@@ -260,15 +276,28 @@
                 await resultModal.OnShowModalClick();
             }
         }
-        
     }
 
+    // Show the funeral creation modal
     private async Task OnShowModalClick() => await modal.ShowAsync();
 
+    // Hide the funeral creation modal
     private async Task OnHideModalClick()
     {
-        name = string.Empty;
+        // Reset the information in the modal
+        name = string.Empty; 
+        date = null;
+        location = null;
+
         await modal.HideAsync();
         await Task.CompletedTask;
+    }
+
+    // Handle the change in the radio buttons
+    private async Task OnSelectionChanged(bool value)
+    {
+        showArchived = value;
+        if (grid is not null) 
+            await grid.RefreshDataAsync();
     }
 }
