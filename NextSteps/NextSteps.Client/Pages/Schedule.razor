@@ -237,21 +237,13 @@
         // Update the event in the database
         var result = await _event.UpdateEvent(evnt);
 
-        if (result is not null)
-        {
-            // Display success message to user
-            modalTitle = "Save Successful";
-            modalBody = "The changes to the event has been saved.";
-            await modal.OnShowModalClick();
-        }
-        else
+        if (result is null)
         {
             // Display error message to user
             modalTitle = "Error";
             modalBody = "An error occurred and the event was not saved.";
             await modal.OnShowModalClick();
         }
-        
     }
 
     // Method for deleting an event
