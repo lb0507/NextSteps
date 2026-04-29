@@ -146,7 +146,13 @@
 
     private async Task ToggleStatus(NsTask togglableTask)
     {
+        if (togglableTask.IsComplete)
+            togglableTask.CompletionDate = null;
+        else
+            togglableTask.CompletionDate = DateTime.Now;
+
         togglableTask.IsComplete = !togglableTask.IsComplete;
+
         CountTasks(); 
         await _task.UpdateTask(togglableTask);
         StateHasChanged();
