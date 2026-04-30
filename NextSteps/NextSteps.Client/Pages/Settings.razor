@@ -1,0 +1,397 @@
+﻿@*
+    Settings Page
+    4/29/2026
+    ======================================
+    - Initial page creation
+    ======================================
+*@
+
+@using BlazorBootstrap
+@using DataLibrary.Models;
+@using DataLibrary.ServiceLayer.UserService;
+@using NextSteps.Client.Components
+@using NextSteps.Client.Shared
+
+<!-- Inject Services -->
+@inject NavigationManager _nav
+@inject BrowserStorageService _storage
+@inject IUserService _user;
+
+<!-- Allows user to interact -->
+@rendermode InteractiveServer
+
+<!-- Override MainLayout from Server and use Client's Custom Layout-->
+@layout CustomLayout
+
+@page "/settings"
+
+<!-- Screen Message Modal -->
+<ScreenModal @ref="modal" TitleText="@modalTitle" BodyText="@modalBody" URL="@modalURL" />
+
+
+<!-- Modal for users to change their password -->
+<Modal @ref="passwordModal" Title="Change Password"
+       IsVerticallyCentered
+       Size="ModalSize.Large"
+       Class="note-modal">
+
+    <BodyTemplate>
+
+        <div class="modal-body">
+
+            <!-- Input field for confirming the user's current password -->
+            <div>
+                <label>Old Password</label>
+                <input type="@oldPwVisibility"
+                       @bind="oldPassword"
+                       style="width:100%" />
+               
+                    <!-- CheckBox for toggling password visibility -->
+                    <div class="chkbx">
+                        <input type="checkbox" @onclick="@(() => { showOldPassword = !showOldPassword; oldPwVisibility = showOldPassword ? "text" : "password"; })">
+                        <span> Show </span>
+                    </div>
+            </div>
+
+            <!-- Input field for the user's new password -->
+            <div>
+                <label>New Password</label>
+                <input type="@newPwVisibility"
+                       @bind="newPassword"
+                       style="width:100%" />
+
+                <!-- CheckBox for toggling password visibility -->
+                <div class="chkbx">
+                    <input type="checkbox" @onclick="@(() => { showNewPassword = !showNewPassword; newPwVisibility = showNewPassword ? "text" : "password"; })">
+                    <span> Show </span>
+
+                </div>
+            </div>
+        </div>
+
+    </BodyTemplate>
+
+    <FooterTemplate>
+
+        <!-- Close Button -->
+        <Button Color="ButtonColor.Secondary" @onclick="OnHideModalClick">Cancel</Button>
+
+        <!-- Change Password Button -->
+        <Button Color="ButtonColor.Primary" @onclick="HandlePasswordChange">Change Password</Button>
+
+    </FooterTemplate>
+
+</Modal>
+
+
+<!-- Screen Message Modal for confirming deletion -->
+<DecisionModal @ref="confirmationModal"
+               TitleText="Confirm Deletion?"
+               MiddleText="Please confirm that you would like to delete your account. This action cannot be undone."
+               Buttons="@modalButtons" />
+
+
+<div class="page-container">
+
+    <div class="header-row">
+
+        <!-- Page Title -->
+        <h1>Settings</h1>
+
+        <!-- Back button to return to category selection/funeral landing page -->
+        <Button Type="ButtonType.Link" Style="font-size: 18px;" To="/funeral">Back to Category Selection</Button>
+
+    </div>
+
+    <Tabs>
+
+        <Tab Title="Account">
+            <Content>
+
+                <!-- Table for formatting the input fields for Contact Details -->
+                <table style="width: 70%; margin-top: 4vh;">
+
+                    <colgroup>
+                        <col span="1" style="width: 15%" />
+                    </colgroup>
+                    <colgroup>
+                        <col span="1" style="width: 85%" />
+                    </colgroup>
+
+                    <!-- FIRST NAME -->
+                    <tr>
+                        <td>
+                            <label>First Name</label>
+                        </td>
+
+                        <td>
+                            <!-- Input field for the user's first name -->
+                            <input type="text"
+                                   @bind="currentUser?.FirstName"
+                                   style="width:50%" />
+                        </td>
+                    </tr>
+
+                    <!-- LAST NAME -->
+                    <tr>
+                        <td>
+                            <label>Last Name</label>
+                        </td>
+
+                        <td>
+                            <!-- Input field for the user's last name -->
+                            <input type="text"
+                                   @bind="currentUser?.LastName"
+                                   style="width:50%" />
+                        </td>
+                    </tr>
+
+                    <!-- USER EMAIL -->
+                    <tr>
+                        <td>
+                            <label>Email Address</label>
+                        </td>
+
+                        <td>
+                            <div>
+
+                                <!-- Input field for user's email address -->
+                                <input type="text"
+                                       @bind="emailAddress"
+                                       style="width:50%" />
+
+                            </div>
+
+                        </td>
+                    </tr>
+
+                </table>
+
+                <div class="buttons">
+
+                    <!-- Delete Account Button -->
+                    <Button Color="ButtonColor.Danger" @onclick="async () => { await confirmationModal.OnShowModalClick(); }">Delete Account</Button>
+
+                    <!-- Change Password Button -->
+                    <Button Color="ButtonColor.Secondary" @onclick="async () => await passwordModal.ShowAsync()">Change Password</Button>
+
+                    <!-- Save Contact Button -->
+                    <Button Color="ButtonColor.Primary" @onclick="HandleSave">Save</Button>
+
+                </div>
+
+            </Content>
+        </Tab>
+
+    </Tabs>
+
+</div>  
+
+
+@code {
+    private User? currentUser;
+
+    private string? emailAddress;
+
+    private Modal passwordModal = default!;
+    private string oldPassword = "";
+    private string newPassword = "";
+
+    private bool showOldPassword = false;
+    private string oldPwVisibility = "password";
+    private bool showNewPassword = false;
+    private string newPwVisibility = "password";
+
+    #region[MODAL]
+    private ScreenModal modal = default!;
+    private DecisionModal confirmationModal = default!;
+    private string modalTitle = string.Empty;
+    private string modalBody = string.Empty;
+    private string modalURL = string.Empty;
+
+    // Buttons container for the deletion confirmation modal
+    private Dictionary<string, (Func<Task>, BlazorBootstrap.ButtonColor)> modalButtons = new();
+
+    #endregion
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Get the current user from browser storage
+            currentUser = await _storage.GetFromStorage<User>("currentUser") ?? new();
+
+            // Check if the user is signed in. If not, navigate them to the Sign In page
+            if (currentUser is null)
+                _nav.NavigateTo("/");
+
+            emailAddress = currentUser?.Email;
+
+            // Set the buttons for the deletion confirmation modal
+            modalButtons = new Dictionary<string, (Func<Task>, BlazorBootstrap.ButtonColor)>
+            {
+                // Button for cancelling the deletion
+                ["Cancel"] =
+                (
+                    async () => { await confirmationModal.OnHideModalClick(); },
+                    ButtonColor.Secondary
+                ),
+
+                // Button for proceeding with the deletion
+                ["Delete"] =
+                (
+                    async () => { await HandleUserDeletion(); await confirmationModal.OnHideModalClick(); },
+                    ButtonColor.Danger
+                )
+            };
+
+            // Rerender the page
+            StateHasChanged();
+        }
+    }
+
+    // Create or Update the User
+    private async Task HandleSave()
+    {
+        // Check user inputs for errors
+        var validated = await ValidateInputs();
+
+        if (validated && currentUser is not null)
+        {
+            // Update the user's info
+            var result = await _user.UpdateUser(currentUser);
+
+            if (result is not null)
+            {
+                await _storage.SetInStorage("currentUser", result);
+
+                // Display success message to user and redirect them back to the funeral landing page
+                modalTitle = "Save Successful";
+                modalBody = "Your information has been updated successfully.";
+                modalURL = $"/funeral";
+                await modal.OnShowModalClick();
+            }
+            else
+            {
+                // Display error message to user
+                modalTitle = "Error";
+                modalBody = "An error occurred and the contact was not saved.";
+                await modal.OnShowModalClick();
+            }
+        }     
+    }
+
+    // Handle error checking for user info update
+    private async Task<bool> ValidateInputs()
+    {
+        // Display an error message to the user if they attempt to save without entering their email
+        if (string.IsNullOrWhiteSpace(emailAddress))
+        {
+            modalTitle = "Error";
+            modalBody = "Email address cannot be empty. Please enter a type and try again.";
+            await modal.OnShowModalClick();
+            return false;
+        }
+
+        // If the user's email has changed, verify that the new email does not already exist in the database
+        if (emailAddress != currentUser?.Email)
+        {
+            var exists = await _user.ValidateEmail(emailAddress);
+
+            // Display an error if the email is found to already exist
+            if (exists)
+            {
+                modalTitle = "Error";
+                modalBody = "An account already exists with the entered email.";
+                await modal.OnShowModalClick();
+                return false;
+            }
+        }
+
+        // Display an error message to the user if they attempt to save without entering their name first
+        if (string.IsNullOrWhiteSpace(currentUser?.FirstName))
+        {
+            modalTitle = "Error";
+            modalBody = "First name cannot be empty. Please enter a name and try again.";
+            await modal.OnShowModalClick();
+            return false;
+        }
+
+        // Verify that the email is in the correct format
+        if (!currentUser.Email.Contains("@")) 
+        {
+            modalTitle = "Error";
+            modalBody = "Email address is in incorrect format. Please validate your email address and try again.";
+            await modal.OnShowModalClick();
+            return false;
+        }
+
+        return true;
+    }
+
+    // Handle contact deletion
+    private async Task HandleUserDeletion()
+    {
+        if (currentUser is null)
+            return;
+
+        // Delete the user
+        var result = await _user.DeleteUser(currentUser.UserId);
+
+        if (result)
+        {   // Account Deletion Successful
+
+            // Clear the user from browser storage
+            await _storage.RemoveFromStorage("currentUser");
+
+            // Display confimation message to user
+            modalTitle = "Deletion Confirmed";
+            modalBody = "Your account has been deleted.";
+            modalURL = "/";
+            await modal.OnShowModalClick();
+        }
+        else
+        {   // Account Deletion Failed
+
+            // Contact error message to user
+            modalTitle = "Error";
+            modalBody = "An error occurred and your account was not deleted.";
+            await modal.OnShowModalClick();
+        }
+    }
+
+    // Close Password Change modal
+    private async Task OnHideModalClick()
+    {
+        oldPassword = ""; 
+        newPassword = ""; 
+        await passwordModal.HideAsync();
+    }
+
+    // Handle changing the user's password
+    private async Task HandlePasswordChange()
+    {
+        if (currentUser is null)
+            return;
+
+        var success = await _user.ChangePassword(oldPassword, newPassword, currentUser);
+
+        if (success)
+        {
+            // Hide the modal
+            await OnHideModalClick();
+
+            // Display success message to user
+            modalTitle = "Success";
+            modalBody = "Your password has been changed.";
+            await modal.OnShowModalClick();
+        }        
+        else
+        {
+            // Display error message to user
+            modalTitle = "Error";
+            modalBody = "An error occurred and your password was not changed. Please verify that your old password is correct and try again.";
+            await modal.OnShowModalClick();
+        }
+    }
+}

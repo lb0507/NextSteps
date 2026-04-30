@@ -1,8 +1,9 @@
 ﻿/* 
 *    IUserService.cs
-*    3/13/2026
+*    4/29/2026
 *    ======================================
 *    - Initial creation
+*    - Added methods for users to manage their accounts
 *    ======================================
 *    Interface for User related Database calls
 *   
@@ -22,5 +23,14 @@ namespace DataLibrary.ServiceLayer.UserService
         
         //Checks if a passed in email address already exists in the database
         Task<bool> ValidateEmail(string email);
+
+        // Update User in the database
+        Task<User?> UpdateUser(User user);
+
+        // Change User's Password
+        Task<bool> ChangePassword(string oldPassword, string newPassword, User user);
+
+        // Delete a User
+        Task<bool> DeleteUser(Guid user);
     }
 }

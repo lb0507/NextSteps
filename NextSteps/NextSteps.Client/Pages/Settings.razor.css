@@ -1,0 +1,30 @@
+﻿.chkbx{
+    display: flex;
+    margin-bottom: 10px;
+    gap: 7px;
+    align-items: center;
+}
+
+span{
+/*    padding-top: 5px;*/
+}
+
+input {
+    height: 4vh;
+}
+
+td {
+    height: 6vh;
+}
+
+
+
+.modal-body {
+    width: 100%;
+    padding: 10px;
+}
+
+.notes-desc-input {
+    width: 100%;
+    padding: 8px;
+}

@@ -157,6 +157,18 @@
                     </div>
                 </td>
 
+                <td>
+                    <div align="center">
+                        <Card Color="CardColor.Dark" TextAlignment="Alignment.Center" class="category-card" @onclick="@(() => _nav.NavigateTo("/settings"))">
+                            <CardBody>
+                                <Icon Name="IconName.Gear" Size="IconSize.x1" Color="IconColor.Light" />
+                                <br>
+                                <text class="label"> Settings </text>
+                            </CardBody>
+                        </Card>
+                    </div>
+                </td>
+
             </tr>
 
         </table>

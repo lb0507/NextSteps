@@ -80,7 +80,7 @@
                                     </GridColumn>
 
                                     <!-- Download Button Column -->
-                                    <GridColumn TItem="BlobItem" HeaderText="" PropertyName="" SortKeySelector="item => item.Name" Filterable=false Sortable=false Class=" text-center">
+                                    <GridColumn TItem="BlobItem" SortKeySelector="item => item.Name" Filterable=false Sortable=false Class="text-center">
                                         <Button @onclick="@(async() => await _js.InvokeVoidAsync("downloadDocument", context.Name, DocData[context.Name]))">Download</Button>
                                     </GridColumn>
 

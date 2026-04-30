@@ -1,8 +1,9 @@
 ﻿/* 
 *    UserService.cs
-*    3/13/2026
+*    4/29/2026
 *    ======================================
 *    - Initial creation
+*    - Added methods for users to manage their accounts
 *    ======================================
 *    Service Layer for User related Database calls
 *   
@@ -12,7 +13,6 @@ using DataLibrary.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
-using System.Data;
 
 
 namespace DataLibrary.ServiceLayer.UserService
@@ -108,7 +108,7 @@ namespace DataLibrary.ServiceLayer.UserService
                     // Add the parameters values to the query
                     cmd.Parameters.AddWithValue("@UserId", user.UserId);
                     cmd.Parameters.AddWithValue("@FirstName", user.FirstName);
-                    cmd.Parameters.AddWithValue("@LastName", user.LastName ?? string.Empty);
+                    cmd.Parameters.AddWithValue("@LastName", string.IsNullOrEmpty(user.LastName) ? DBNull.Value : user.LastName);
                     cmd.Parameters.AddWithValue("@Email", user.Email);
                     cmd.Parameters.AddWithValue("@PasswordHash", hashedPassword);
 
@@ -149,6 +149,129 @@ namespace DataLibrary.ServiceLayer.UserService
                     
                     // Convert the result to an integer and check if a value was found
                     if (emailExists != null && (int)emailExists > 0)
+                        return true;
+                    else
+                        return false;
+                }
+            }
+            catch (SqlException ex)
+            {
+                Console.WriteLine("SQL Error: " + ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("An error occurred: " + ex.Message);
+            }
+            return false;
+        }
+
+        // Update User in the database
+        public async Task<User?> UpdateUser(User user)
+        {
+            try
+            {
+                // Get the database connection string from Azure Key Vault and establish connection
+                using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
+                {
+                    await conn.OpenAsync();
+                    SqlCommand cmd = new SqlCommand
+                    (
+                        "UPDATE Users SET FirstName = @FirstName, LastName = @LastName, Email = @Email WHERE UserId = @UserId", 
+                        conn
+                    );
+
+                    // Add the parameters values to the query
+                    cmd.Parameters.AddWithValue("@FirstName", user.FirstName);
+                    cmd.Parameters.AddWithValue("@LastName", user.LastName ?? string.Empty);
+                    cmd.Parameters.AddWithValue("@Email", user.Email);
+                    cmd.Parameters.AddWithValue("@UserId", user.UserId);
+
+                    // Execute the query and check if a row was affected
+                    if (await cmd.ExecuteNonQueryAsync() > 0)
+                        return user;
+                    else
+                        return null;
+                }
+            }
+            catch (SqlException ex)
+            {
+                Console.WriteLine("SQL Error: " + ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("An error occurred: " + ex.Message);
+            }
+
+            return null;
+        }
+
+        // Change User's Password
+        public async Task<bool> ChangePassword(string oldPassword, string newPassword, User user)
+        {
+            var hasher = new PasswordHasher<User>();
+
+            // Verify that the old password the user entered is correct
+            var result = hasher.VerifyHashedPassword(user, user.Password, oldPassword);
+            if (result == PasswordVerificationResult.Failed)
+                return false;
+           
+            // Hash the new password
+            var hashedPassword = hasher.HashPassword(user, newPassword);
+
+            try
+            {
+                // Get the database connection string from Azure Key Vault and establish connection
+                using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
+                {
+                    await conn.OpenAsync();
+                    SqlCommand cmd = new SqlCommand
+                    (
+                        "UPDATE Users SET HashedPassword = @PasswordHash WHERE UserId = @UserId",
+                        conn
+                    );
+
+                    // Add the parameters values to the query
+                    cmd.Parameters.AddWithValue("@PasswordHash", hashedPassword);
+                    cmd.Parameters.AddWithValue("@UserId", user.UserId);
+
+                    // Execute the query and check if a row was affected
+                    if (await cmd.ExecuteNonQueryAsync() > 0)
+                        return true;  
+                    else
+                        return false;
+                }
+            }
+            catch (SqlException ex)
+            {
+                Console.WriteLine("SQL Error: " + ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("An error occurred: " + ex.Message);
+            }
+            return false;
+        }
+
+        // Delete a User
+        public async Task<bool> DeleteUser(Guid userId)
+        {
+            try
+            {
+                // Get the database connection string from Azure Key Vault and establish connection
+                using (SqlConnection conn = new SqlConnection(_config["DbConnectionString"]))
+                {
+                    await conn.OpenAsync();
+                    SqlCommand cmd = new SqlCommand
+                    (
+                        "DELETE FROM Users WHERE UserId = @UserId",
+                        conn
+                    );
+
+                    // Add the parameters values to the query
+                    cmd.Parameters.AddWithValue("@UserId", userId);
+
+                    // Execute the query and check if a row was affected
+                    if (await cmd.ExecuteNonQueryAsync() > 0)
                         return true;
                     else
                         return false;
